@@ -9,7 +9,7 @@ This project provides a sophisticated web-based dashboard for performance testin
 ![Architecture](https://img.shields.io/badge/Architecture-Modular-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/Version-1.0-brightgreen)
-![Backend](https://img.shields.io/badge/Backend-Spring%20Boot%20%7C%20Node.js-blue)
+![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Optional%20Spring%20Boot-blue)
 ![Language](https://img.shields.io/badge/Go-Performance%20Engine-orange)
 
 ## 🖼️ Dashboard Preview
@@ -18,7 +18,7 @@ This project provides a sophisticated web-based dashboard for performance testin
 
 ## 🎯 Key Features
 
-* **🔍 Dual Backend Testing**: Compare Spring Boot and Node.js Express simultaneously
+* **🔍 Dual Backend Testing**: Compare Node.js Express and optionally Spring Boot
 * **⚡ Dual Middleware Options**: Test using Go or JavaScript as the testing engine
 * **📊 Real-time Metrics**: Live performance metrics with beautiful visualizations
 * **🔧 Multiple Test Scenarios**: POST, GET, Mixed, and Stress testing
@@ -33,6 +33,7 @@ api-performance-benchmark/
 ├── ⚙️ middleware/ # Performance testing engines
 │ ├── 🐹 go/ # Go middleware server
 │ └── ⚡ nodejs/ # JavaScript middleware server
+├── backend/springboot/ # Optional Spring Boot backend (submodule)
 ├── 🔨 build/ # Build scripts
 └── 📄 README.md # This file
 
@@ -47,8 +48,8 @@ api-performance-benchmark/
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/dolamasa1/api-performance-benchmark.git
-cd api-performance-benchmark
+git clone https://github.com/dolamasa1/API-Performance-Benchmark.git
+cd API-Performance-Benchmark
 ```
 
 ### 2. Build Everything
@@ -73,11 +74,11 @@ chmod +x build/build.sh
 ### 1. Start Your Backend Services (Test Targets)
 
 ```bash
-# Spring Boot (Port 8080)
-# Make sure your Spring Boot app is running on http://localhost:8080
-
 # Node.js Express (Port 5000)
 # Make sure your Node.js backend is running on http://localhost:5000
+
+# Optional Spring Boot (Port 8080)
+# Used only for performance comparison
 ```
 
 ### 2. Start the Middleware Servers
@@ -126,8 +127,8 @@ Navigate to **[http://localhost:8000](http://localhost:8000)** in your browser.
 ✅ **Backends Running:**
 
 ```bash
-Spring Boot: curl http://localhost:8080/api/health
 Node.js: curl http://localhost:5000/api/health
+# Optional Spring Boot: curl http://localhost:8080/api/health
 ```
 
 ✅ **Middleware Running:**
@@ -142,82 +143,32 @@ Open `http://localhost:8000` in your browser.
 
 ---
 
+## 🏗️ Optional Backend Submodule
+
+The Spring Boot backend is included as a **Git submodule** for performance comparison. It is **tracked in this repository** but is optional for running the dashboard.
+
+* **Path:** `backend/springboot`
+* **Repository:** [raven-messenger-backend](https://github.com/dolamasa1/raven-messenger-backend/tree/4c5e75cbd1b86ba1af45ea62cceb5ac80887c5f5)
+* **Commit:** `4c5e75cbd1b86ba1af45ea62cceb5ac80887c5f5`
+
+Initialize the submodule after cloning:
+
+```bash
+git submodule update --init --recursive
+```
+
+> ⚠️ The dashboard works without this backend; it’s used only for benchmark comparison.
+
+---
+
 ## 🎮 Usage
 
 1. Configure Settings: Click ⚙️ to set backend endpoints
-2. Authenticate: Connect to Spring Boot and Node.js backends
+2. Authenticate: Connect to Node.js backend (Spring Boot optional)
 3. Select Test: Choose scenario, request count, and concurrency
 4. Choose Middleware: Switch between Go and JavaScript engines
 5. Run Benchmark: Execute tests and monitor real-time results
 6. Analyze Results: Compare performance metrics and efficiency
-
----
-
-## 📊 Test Scenarios
-
-| Scenario           | Description                         | Use Case              |
-| ------------------ | ----------------------------------- | --------------------- |
-| **POST Messages**  | Send multiple messages via POST API | Write-heavy workloads |
-| **GET Messages**   | Fetch messages via GET API          | Read-heavy workloads  |
-| **Mixed Workload** | 50% POST, 50% GET requests          | Real-world simulation |
-| **Stress Test**    | High concurrency rapid fire         | System limits testing |
-
----
-
-## 🔧 Configuration
-
-**Default Endpoints:**
-Spring Boot → `http://localhost:8080`
-Node.js Express → `http://localhost:5000`
-Go Middleware → `http://localhost:8090`
-JavaScript Middleware → `http://localhost:3000`
-
-Create `.env` file to customize:
-
-```env
-SPRING_BOOT_URL=http://localhost:8080
-NODE_EXPRESS_URL=http://localhost:5000
-GO_MIDDLEWARE_URL=http://localhost:8090
-JS_MIDDLEWARE_URL=http://localhost:3000
-```
-
----
-
-## 🐛 Troubleshooting
-
-**CORS Errors:**
-
-* Serve frontend via HTTP server, not `file://` protocol
-* Ensure backends have proper CORS configuration
-
-**Connection Failures:**
-
-* Verify backend services are running
-* Check firewall and port accessibility
-
-**Test Failures:**
-
-* Check backend API availability
-* Review middleware logs
-
-**Debug Mode:**
-Enable detailed logging in Settings → Set Log Level to “All Messages”
-
----
-
-## 🛠️ Development
-
-**Adding New Backends:**
-
-* Update configuration in Settings modal
-* Implement API endpoints in config
-* Test with both middleware engines
-
-**Extending Test Scenarios:**
-
-* Define new scenario in frontend config
-* Update both middleware implementations
-* Add UI controls and validation
 
 ---
 
@@ -234,6 +185,8 @@ See LICENSE file for full details.
 📧 [ahmed.adel.elmoghraby@gmail.com](mailto:ahmed.adel.elmoghraby@gmail.com)
 🌐 [GitHub: dolamasa1](https://github.com/dolamasa1)
 
-### 🧠 About the Author (Optional)
+### 🧠 About the Author & Project Status
 
-Ahmed Adel Moghraby is a passionate developer who focuses on system optimization, API architecture, and cross-technology performance measurement. His work bridges backend engineering and analytical benchmarking to deliver insights that drive r
+Ahmed Adel Moghraby is a passionate developer focused on system optimization, API architecture, and cross-technology performance measurement.
+
+⚠️ **Project Status:** This repository is still under active development; features and workflows may change in future updates.
