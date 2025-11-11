@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Performance Benchmark Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0f1419;
+            color: #e4e7eb;
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0f1419 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #2d3748;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-content {
+            max-width: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-settings {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-settings:hover {
+            border-color: #475569;
+            color: #e4e7eb;
+            background: #2d3748;
+        }
+
+        /* Main Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px 1fr;
+            gap: 1.5rem;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            overflow-x: hidden;
+        }
+
+        /* Technology Panels */
+        .tech-panel {
+            background: #1a1f2e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #2d3748;
+            min-width: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .tech-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .tech-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .spring-logo {
+            background: linear-gradient(135deg, #6db33f 0%, #4e8b2f 100%);
+            box-shadow: 0 4px 12px rgba(109, 179, 63, 0.25);
+        }
+
+        .node-logo {
+            background: linear-gradient(135deg, #68a063 0%, #3c873c 100%);
+            box-shadow: 0 4px 12px rgba(104, 160, 99, 0.25);
+        }
+
+        .tech-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tech-info h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.25rem;
+        }
+
+        .tech-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .tech-status.connected {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .tech-status.disconnected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Auth Compact */
+        .auth-compact {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .auth-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .auth-compact input {
+            flex: 1;
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            color: #e4e7eb;
+            padding: 0.625rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .auth-compact input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-auth {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Execution Time Calculator */
+        .exec-calc {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .exec-calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .exec-calc-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .exec-calc-lang {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .lang-btn {
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            color: #94a3b8;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            border-color: #3b82f6;
+            color: #e4e7eb;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .exec-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1a1f2e;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .exec-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .exec-time {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .exec-unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-left: 0.25rem;
+        }
+
+        .btn-run-exec {
+            width: 100%;
+            margin-top: 0.5rem;
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            color: #94a3b8;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-run-exec:hover {
+            border-color: #3b82f6;
+            color: #e4e7eb;
+        }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.875rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-card {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 1rem;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value-wrapper {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-value.live {
+            color: #3b82f6;
+            animation: value-update 0.5s ease;
+        }
+
+        @keyframes value-update {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .metric-unit {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Console */
+        .console-section {
+            margin-top: auto;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .console-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-clear-console {
+            background: transparent;
+            color: #64748b;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-console:hover {
+            color: #e4e7eb;
+            background: #1a1f2e;
+        }
+
+        .console {
+            background: #0a0e14;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 0.75rem;
+            height: 180px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .console::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .console::-webkit-scrollbar-track {
+            background: #0a0e14;
+        }
+
+        .console::-webkit-scrollbar-thumb {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+
+        .console-line {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .console-line.info {
+            color: #60a5fa;
+        }
+
+        .console-line.success {
+            color: #34d399;
+        }
+
+        .console-line.error {
+            color: #f87171;
+        }
+
+        .console-line.warning {
+            color: #fbbf24;
+        }
+
+        .console-timestamp {
+            color: #64748b;
+            margin-right: 0.5rem;
+        }
+
+        /* Control Center */
+        .control-center {
+            background: linear-gradient(180deg, #1a1f2e 0%, #0f1419 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 0;
+            border: 1px solid #2d3748;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .control-center::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 0%, #3b82f6 50%, transparent 100%);
+            opacity: 0.3;
+        }
+
+        .control-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .control-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 0.35rem;
+        }
+
+        .control-subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .test-config {
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .config-field label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .config-field select,
+        .config-field input {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            color: #e4e7eb;
+            padding: 0.625rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .config-field select:focus,
+        .config-field input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            margin-top: auto;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 0.875rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #2d3748;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: #3b82f6;
+            color: #e4e7eb;
+        }
+
+        /* Progress */
+        .progress-section {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #2d3748;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .progress-section.active {
+            opacity: 1;
+            max-height: 200px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: #0f1419;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.875rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.875rem;
+        }
+
+        .progress-stat {
+            background: #0f1419;
+            padding: 0.5rem;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #2d3748;
+        }
+
+        .progress-stat-label {
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        /* Comparison Badge */
+        .comparison-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Settings Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1f2e;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #2d3748;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-close:hover {
+            background: #2d3748;
+            color: #e4e7eb;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .settings-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .settings-section {
+            background: #0f1419;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .setting-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .setting-field label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #e4e7eb;
+        }
+
+        .setting-field input,
+        .setting-field select {
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            color: #e4e7eb;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .setting-field input:focus,
+        .setting-field select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .setting-description {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #2d3748;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-modal {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-modal-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-modal-secondary {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #2d3748;
+        }
+
+        .btn-modal-secondary:hover {
+            border-color: #3b82f6;
+            color: #e4e7eb;
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .control-center::before {
+                display: none;
+            }
+
+            .comparison-badge {
+                display: none;
+            }
+
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 1400px) and (max-width: 1600px) {
+            .settings-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="title">API Performance Benchmark Suite</h1>
+                    <p class="subtitle">Real-time comparative analysis and load testing</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-settings" onclick="openSettings()">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Spring Boot Panel -->
+            <div class="tech-panel">
+                <div class="tech-header">
+                    <div class="tech-logo spring-logo">☕</div>
+                    <div class="tech-info">
+                        <h2>Spring Boot</h2>
+                        <span class="tech-status disconnected" id="spring-status">
+                            <span class="status-dot"></span>
+                            Not Connected
+                        </span>
+                    </div>
+                </div>
+
+                <div class="auth-compact">
+                    <div class="auth-row">
+                        <input type="text" id="spring-user" placeholder="Username" value="admin">
+                        <input type="password" id="spring-pass" placeholder="Password" value="password">
+                        <button class="btn-auth" onclick="authenticate('spring')">Connect</button>
+                    </div>
+                </div>
+
+                <!-- Execution Time Calculator -->
+                <div class="exec-calc">
+                    <div class="exec-calc-header">
+                        <span class="exec-calc-title">⚡ Execution Time</span>
+                        <div class="exec-calc-lang">
+                            <button class="lang-btn active" onclick="selectLang('spring', 'golang')">Go</button>
+                            <button class="lang-btn" onclick="selectLang('spring', 'javascript')">JS</button>
+                        </div>
+                    </div>
+                    <div class="exec-result">
+                        <span class="exec-label">Runtime Performance:</span>
+                        <div>
+                            <span class="exec-time" id="spring-exec-time">0</span>
+                            <span class="exec-unit">ms</span>
+                        </div>
+                    </div>
+                    <button class="btn-run-exec" onclick="runExecTest('spring')">Run Test</button>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Response Time</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-response">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Throughput</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-throughput">0</span>
+                            <span class="metric-unit">req/s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-success">0</span>
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Total Errors</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-errors">0</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Min / Max</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-minmax" style="font-size: 1.25rem;">0 / 0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">P95 Latency</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-p95">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-section">
+                    <div class="console-header">
+                        <span class="console-title">Console Output</span>
+                        <button class="btn-clear-console" onclick="clearConsole('spring')">Clear</button>
+                    </div>
+                    <div class="console" id="spring-console">
+                        <div class="console-line info">
+                            <span class="console-timestamp">[00:00:00]</span>
+                            <span>Spring Boot service ready...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Center -->
+            <div class="control-center">
+                <div class="comparison-badge">VS</div>
+                
+                <div class="control-header">
+                    <span class="control-icon">⚡</span>
+                    <h3 class="control-title">Test Controller</h3>
+                    <p class="control-subtitle">Configure and execute benchmarks</p>
+                </div>
+
+                <div class="test-config">
+                    <div class="config-field">
+                        <label>Test Scenario</label>
+                        <select id="scenario">
+                            <option value="post">POST - Send Messages</option>
+                            <option value="get">GET - Fetch Messages</option>
+                            <option value="mixed">Mixed - 50/50 POST/GET</option>
+                            <option value="stress">Stress Test - Rapid Fire</option>
+                        </select>
+                    </div>
+
+                    <div class="config-field">
+                        <label>Request Count</label>
+                        <input type="number" id="count" value="1000" min="10" max="10000" step="10">
+                    </div>
+
+                    <div class="config-field">
+                        <label>Target User ID</label>
+                        <input type="number" id="target" value="2" min="1">
+                    </div>
+
+                    <div class="config-field">
+                        <label>Concurrency Level</label>
+                        <select id="concurrency">
+                            <option value="1">Sequential (1)</option>
+                            <option value="5">Low (5)</option>
+                            <option value="10" selected>Medium (10)</option>
+                            <option value="25">High (25)</option>
+                            <option value="50">Extreme (50)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" id="run-btn" onclick="executeTests()">
+                        <span>▶</span>
+                        <span>Run Benchmark</span>
+                    </button>
+                    <button class="btn-secondary" onclick="resetAll()">
+                        Reset All Metrics
+                    </button>
+                </div>
+
+                <div class="progress-section" id="progress">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Initializing...</p>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <div class="progress-stat-label">Completed</div>
+                            <div class="progress-stat-value" id="completed">0</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="progress-stat-label">Remaining</div>
+                            <div class="progress-stat-value" id="remaining">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Node.js Panel -->
+            <div class="tech-panel">
+                <div class="tech-header">
+                    <div class="tech-logo node-logo">⬢</div>
+                    <div class="tech-info">
+                        <h2>Node.js Express</h2>
+                        <span class="tech-status disconnected" id="node-status">
+                            <span class="status-dot"></span>
+                            Not Connected
+                        </span>
+                    </div>
+                </div>
+
+                <div class="auth-compact">
+                    <div class="auth-row">
+                        <input type="text" id="node-user" placeholder="Username" value="admin">
+                        <input type="password" id="node-pass" placeholder="Password" value="password">
+                        <button class="btn-auth" onclick="authenticate('node')">Connect</button>
+                    </div>
+                </div>
+
+                <!-- Execution Time Calculator -->
+                <div class="exec-calc">
+                    <div class="exec-calc-header">
+                        <span class="exec-calc-title">⚡ Execution Time</span>
+                        <div class="exec-calc-lang">
+                            <button class="lang-btn active" onclick="selectLang('node', 'golang')">Go</button>
+                            <button class="lang-btn" onclick="selectLang('node', 'javascript')">JS</button>
+                        </div>
+                    </div>
+                    <div class="exec-result">
+                        <span class="exec-label">Runtime Performance:</span>
+                        <div>
+                            <span class="exec-time" id="node-exec-time">0</span>
+                            <span class="exec-unit">ms</span>
+                        </div>
+                    </div>
+                    <button class="btn-run-exec" onclick="runExecTest('node')">Run Test</button>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Response Time</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-response">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Throughput</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-throughput">0</span>
+                            <span class="metric-unit">req/s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-success">0</span>
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Total Errors</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-errors">0</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Min / Max</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-minmax" style="font-size: 1.25rem;">0 / 0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">P95 Latency</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-p95">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-section">
+                    <div class="console-header">
+                        <span class="console-title">Console Output</span>
+                        <button class="btn-clear-console" onclick="clearConsole('node')">Clear</button>
+                    </div>
+                    <div class="console" id="node-console">
+                        <div class="console-line info">
+                            <span class="console-timestamp">[00:00:00]</span>
+                            <span>Node.js service ready...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Configuration Settings</h3>
+                <button class="btn-close" onclick="closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-layout">
+                    <!-- Spring Boot Settings -->
+                    <div class="settings-section">
+                        <h4 class="section-title">☕ Spring Boot</h4>
+                        <div class="settings-grid">
+                            <div class="setting-field">
+                                <label>Protocol</label>
+                                <select id="spring-protocol">
+                                    <option value="http">HTTP</option>
+                                    <option value="https">HTTPS</option>
+                                </select>
+                            </div>
+                            <div class="setting-field">
+                                <label>Host</label>
+                                <input type="text" id="spring-host" value="localhost" placeholder="localhost or IP">
+                                <span class="setting-description">Use 'localhost' for local or IP/domain for remote</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Port</label>
+                                <input type="number" id="spring-port" value="8080" min="1" max="65535">
+                                <span class="setting-description">Default: 8080</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Base Path</label>
+                                <input type="text" id="spring-base" value="" placeholder="/api or empty">
+                                <span class="setting-description">Optional base path</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Timeout (ms)</label>
+                                <input type="number" id="spring-timeout" value="30000" min="1000" max="120000" step="1000">
+                                <span class="setting-description">Request timeout</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Node.js Settings -->
+                    <div class="settings-section">
+                        <h4 class="section-title">⬢ Node.js Express</h4>
+                        <div class="settings-grid">
+                            <div class="setting-field">
+                                <label>Protocol</label>
+                                <select id="node-protocol">
+                                    <option value="http">HTTP</option>
+                                    <option value="https">HTTPS</option>
+                                </select>
+                            </div>
+                            <div class="setting-field">
+                                <label>Host</label>
+                                <input type="text" id="node-host" value="localhost" placeholder="localhost or IP">
+                                <span class="setting-description">Use 'localhost' for local or IP/domain for remote</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Port</label>
+                                <input type="number" id="node-port" value="5000" min="1" max="65535">
+                                <span class="setting-description">Default: 5000</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Base Path</label>
+                                <input type="text" id="node-base" value="" placeholder="/api or empty">
+                                <span class="setting-description">Optional base path</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Timeout (ms)</label>
+                                <input type="number" id="node-timeout" value="30000" min="1000" max="120000" step="1000">
+                                <span class="setting-description">Request timeout</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- General Settings -->
+                    <div class="settings-section">
+                        <h4 class="section-title">🔧 General</h4>
+                        <div class="settings-grid">
+                            <div class="setting-field">
+                                <label>API Version</label>
+                                <input type="text" id="api-version" value="1" placeholder="1">
+                                <span class="setting-description">Version in headers</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Retry on Failure</label>
+                                <select id="retry-enabled">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                                <span class="setting-description">Auto-retry failed requests</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Max Retries</label>
+                                <input type="number" id="max-retries" value="3" min="1" max="10">
+                                <span class="setting-description">Maximum retry attempts</span>
+                            </div>
+                            <div class="setting-field">
+                                <label>Console Log Level</label>
+                                <select id="log-level">
+                                    <option value="all">All Messages</option>
+                                    <option value="errors">Errors Only</option>
+                                    <option value="none">Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-secondary" onclick="closeSettings()">Cancel</button>
+                <button class="btn-modal btn-modal-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            spring: { 
+                token: null, 
+                connected: false,
+                endpoint: 'http://localhost:8080',
+                results: [],
+                execLang: 'golang',
+                config: {
+                    protocol: 'http',
+                    host: 'localhost',
+                    port: 8080,
+                    basePath: '',
+                    timeout: 30000
+                }
+            },
+            node: { 
+                token: null, 
+                connected: false,
+                endpoint: 'http://localhost:5000',
+                results: [],
+                execLang: 'golang',
+                config: {
+                    protocol: 'http',
+                    host: 'localhost',
+                    port: 5000,
+                    basePath: '',
+                    timeout: 30000
+                }
+            },
+            testing: false,
+            settings: {
+                apiVersion: '1',
+                retryEnabled: false,
+                maxRetries: 3,
+                logLevel: 'all'
+            }
+        };
+
+        // Execution time test functions
+        function selectLang(tech, lang) {
+            state[tech].execLang = lang;
+            const buttons = document.querySelectorAll(`#${tech === 'spring' ? 'spring' : 'node'}-exec-time`).parentElement.parentElement.parentElement.querySelectorAll('.lang-btn');
+            const parent = document.querySelectorAll('.exec-calc')[tech === 'spring' ? 0 : 1];
+            const langButtons = parent.querySelectorAll('.lang-btn');
+            
+            langButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function runExecTest(tech) {
+            const lang = state[tech].execLang;
+            logToConsole(tech, `Running ${lang.toUpperCase()} execution test...`, 'info');
+            
+            const start = performance.now();
+            
+            // Simulate different execution patterns
+            if (lang === 'golang') {
+                // Simulate Go's performance characteristics
+                golangSimulation();
+            } else {
+                // Simulate JavaScript's performance characteristics  
+                javascriptSimulation();
+            }
+            
+            const duration = performance.now() - start;
+            const execTime = document.getElementById(`${tech}-exec-time`);
+            execTime.textContent = duration.toFixed(2);
+            execTime.classList.add('live');
+            
+            setTimeout(() => {
+                execTime.classList.remove('live');
+            }, 500);
+            
+            logToConsole(tech, `${lang.toUpperCase()} test completed in ${duration.toFixed(2)}ms`, 'success');
+        }
+
+        // Simulate Go-like performance (faster, compiled)
+        function golangSimulation() {
+            let sum = 0;
+            const iterations = 1000000;
+            
+            for (let i = 0; i < iterations; i++) {
+                sum += Math.sqrt(i) * Math.sin(i);
+            }
+            
+            return sum;
+        }
+
+        // Simulate JavaScript performance (interpreted, slightly slower)
+        function javascriptSimulation() {
+            let sum = 0;
+            const iterations = 1000000;
+            const arr = [];
+            
+            for (let i = 0; i < iterations; i++) {
+                arr.push(Math.sqrt(i));
+                sum += arr[arr.length - 1] * Math.sin(i);
+            }
+            
+            return sum;
+        }
+
+        // Console logging
+        function logToConsole(tech, message, type = 'info') {
+            if (state.settings.logLevel === 'none') return;
+            if (state.settings.logLevel === 'errors' && type !== 'error') return;
+
+            const consoleEl = document.getElementById(`${tech}-console`);
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.innerHTML = `<span class="console-timestamp">[${timestamp}]</span><span>${message}</span>`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function clearConsole(tech) {
+            document.getElementById(`${tech}-console`).innerHTML = '';
+            logToConsole(tech, 'Console cleared', 'info');
+        }
+
+        // Settings Modal
+        function openSettings() {
+            document.getElementById('spring-protocol').value = state.spring.config.protocol;
+            document.getElementById('spring-host').value = state.spring.config.host;
+            document.getElementById('spring-port').value = state.spring.config.port;
+            document.getElementById('spring-base').value = state.spring.config.basePath;
+            document.getElementById('spring-timeout').value = state.spring.config.timeout;
+
+            document.getElementById('node-protocol').value = state.node.config.protocol;
+            document.getElementById('node-host').value = state.node.config.host;
+            document.getElementById('node-port').value = state.node.config.port;
+            document.getElementById('node-base').value = state.node.config.basePath;
+            document.getElementById('node-timeout').value = state.node.config.timeout;
+
+            document.getElementById('api-version').value = state.settings.apiVersion;
+            document.getElementById('retry-enabled').value = state.settings.retryEnabled;
+            document.getElementById('max-retries').value = state.settings.maxRetries;
+            document.getElementById('log-level').value = state.settings.logLevel;
+
+            document.getElementById('settings-modal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            state.spring.config.protocol = document.getElementById('spring-protocol').value;
+            state.spring.config.host = document.getElementById('spring-host').value;
+            state.spring.config.port = document.getElementById('spring-port').value;
+            state.spring.config.basePath = document.getElementById('spring-base').value;
+            state.spring.config.timeout = parseInt(document.getElementById('spring-timeout').value);
+            state.spring.endpoint = `${state.spring.config.protocol}://${state.spring.config.host}:${state.spring.config.port}${state.spring.config.basePath}`;
+
+            state.node.config.protocol = document.getElementById('node-protocol').value;
+            state.node.config.host = document.getElementById('node-host').value;
+            state.node.config.port = document.getElementById('node-port').value;
+            state.node.config.basePath = document.getElementById('node-base').value;
+            state.node.config.timeout = parseInt(document.getElementById('node-timeout').value);
+            state.node.endpoint = `${state.node.config.protocol}://${state.node.config.host}:${state.node.config.port}${state.node.config.basePath}`;
+
+            state.settings.apiVersion = document.getElementById('api-version').value;
+            state.settings.retryEnabled = document.getElementById('retry-enabled').value === 'true';
+            state.settings.maxRetries = parseInt(document.getElementById('max-retries').value);
+            state.settings.logLevel = document.getElementById('log-level').value;
+
+            logToConsole('spring', `Endpoint updated: ${state.spring.endpoint}`, 'success');
+            logToConsole('node', `Endpoint updated: ${state.node.endpoint}`, 'success');
+
+            closeSettings();
+        }
+
+        document.getElementById('settings-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSettings();
+            }
+        });
+
+        async function authenticate(tech) {
+            const username = document.getElementById(`${tech}-user`).value;
+            const password = document.getElementById(`${tech}-pass`).value;
+            
+            const statusEl = document.getElementById(`${tech}-status`);
+            statusEl.innerHTML = '<span class="status-dot"></span> Connecting...';
+            
+            logToConsole(tech, `Attempting authentication for user: ${username}`, 'info');
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), state[tech].config.timeout);
+
+                const response = await fetch(`${state[tech].endpoint}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    state[tech].token = data.token;
+                    state[tech].connected = true;
+                    
+                    statusEl.classList.remove('disconnected');
+                    statusEl.classList.add('connected');
+                    statusEl.innerHTML = '<span class="status-dot"></span> Connected';
+                    
+                    logToConsole(tech, 'Authentication successful ✓', 'success');
+                    logToConsole(tech, `Token received: ${data.token.substring(0, 20)}...`, 'info');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status-dot"></span> Connection Failed';
+                logToConsole(tech, `Authentication failed: ${error.message}`, 'error');
+                alert(`${tech} connection error: ${error.message}`);
+            }
+        }
+
+        async function executeTests() {
+            if (!state.spring.connected && !state.node.connected) {
+                alert('Please connect at least one service before running tests.');
+                return;
+            }
+
+            state.testing = true;
+            document.getElementById('run-btn').disabled = true;
+            document.getElementById('progress').classList.add('active');
+
+            const scenario = document.getElementById('scenario').value;
+            const count = parseInt(document.getElementById('count').value);
+            const target = document.getElementById('target').value;
+            const concurrency = parseInt(document.getElementById('concurrency').value);
+
+            document.getElementById('remaining').textContent = count;
+
+            if (state.spring.connected) {
+                logToConsole('spring', `Starting ${scenario} test: ${count} requests, concurrency: ${concurrency}`, 'info');
+            }
+            if (state.node.connected) {
+                logToConsole('node', `Starting ${scenario} test: ${count} requests, concurrency: ${concurrency}`, 'info');
+            }
+
+            const tests = [];
+            if (state.spring.connected) {
+                state.spring.results = [];
+                tests.push(runLoadTest('spring', scenario, count, target, concurrency));
+            }
+            if (state.node.connected) {
+                state.node.results = [];
+                tests.push(runLoadTest('node', scenario, count, target, concurrency));
+            }
+
+            await Promise.all(tests);
+
+            state.testing = false;
+            document.getElementById('run-btn').disabled = false;
+            document.getElementById('progress-text').textContent = 'Benchmark completed successfully!';
+            
+            if (state.spring.connected) {
+                logToConsole('spring', 'Benchmark completed ✓', 'success');
+            }
+            if (state.node.connected) {
+                logToConsole('node', 'Benchmark completed ✓', 'success');
+            }
+        }
+
+        async function runLoadTest(tech, scenario, count, target, concurrency) {
+            const batch = [];
+            let completed = 0;
+
+            for (let i = 0; i < count; i++) {
+                batch.push(sendRequest(tech, scenario, target, i));
+
+                if (batch.length >= concurrency || i === count - 1) {
+                    await Promise.all(batch);
+                    completed += batch.length;
+                    batch.length = 0;
+
+                    const progress = (completed / count * 100).toFixed(1);
+                    document.getElementById('progress-fill').style.width = progress + '%';
+                    document.getElementById('progress-text').textContent = 
+                        `Testing ${tech === 'spring' ? 'Spring Boot' : 'Node.js'}: ${completed}/${count}`;
+                    document.getElementById('completed').textContent = completed;
+                    document.getElementById('remaining').textContent = count - completed;
+
+                    updateMetrics(tech);
+
+                    if (completed % 100 === 0) {
+                        logToConsole(tech, `Progress: ${completed}/${count} requests completed`, 'info');
+                    }
+                }
+            }
+        }
+
+        async function sendRequest(tech, scenario, target, index) {
+            const start = performance.now();
+            let retries = 0;
+            
+            while (retries <= (state.settings.retryEnabled ? state.settings.maxRetries : 0)) {
+                try {
+                    let url = `${state[tech].endpoint}/api/message/`;
+                    let method = 'GET';
+                    
+                    if (scenario === 'post' || (scenario === 'mixed' && index % 2 === 0)) {
+                        url += `send?toUserId=${target}&message=Test${index}`;
+                        method = 'POST';
+                    } else {
+                        url += 'message';
+                    }
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), state[tech].config.timeout);
+
+                    const response = await fetch(url, {
+                        method,
+                        headers: {
+                            'Authorization': `Bearer ${state[tech].token}`,
+                            'version': state.settings.apiVersion
+                        },
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    const duration = performance.now() - start;
+                    state[tech].results.push({
+                        time: duration,
+                        success: response.ok
+                    });
+
+                    if (!response.ok && retries === 0) {
+                        logToConsole(tech, `Request #${index} failed: HTTP ${response.status}`, 'error');
+                    }
+
+                    return;
+
+                } catch (error) {
+                    if (retries < state.settings.maxRetries && state.settings.retryEnabled) {
+                        retries++;
+                        logToConsole(tech, `Request #${index} retry ${retries}/${state.settings.maxRetries}`, 'warning');
+                    } else {
+                        const duration = performance.now() - start;
+                        state[tech].results.push({
+                            time: duration,
+                            success: false
+                        });
+                        if (retries === 0) {
+                            logToConsole(tech, `Request #${index} error: ${error.message}`, 'error');
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        function updateMetrics(tech) {
+            const results = state[tech].results;
+            if (results.length === 0) return;
+
+            const times = results.map(r => r.time);
+            const successful = results.filter(r => r.success).length;
+            const errors = results.length - successful;
+
+            const avg = (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
+            const min = Math.min(...times).toFixed(2);
+            const max = Math.max(...times).toFixed(2);
+            
+            const sorted = [...times].sort((a, b) => a - b);
+            const p95 = sorted[Math.floor(sorted.length * 0.95)].toFixed(2);
+            
+            const throughput = (results.length / (times.reduce((a, b) => a + b, 0) / 1000)).toFixed(2);
+            const successRate = ((successful / results.length) * 100).toFixed(1);
+
+            document.getElementById(`${tech}-response`).textContent = avg;
+            document.getElementById(`${tech}-throughput`).textContent = throughput;
+            document.getElementById(`${tech}-success`).textContent = successRate;
+            document.getElementById(`${tech}-errors`).textContent = errors;
+            document.getElementById(`${tech}-minmax`).textContent = `${min} / ${max}`;
+            document.getElementById(`${tech}-p95`).textContent = p95;
+
+            document.getElementById(`${tech}-response`).classList.add('live');
+            setTimeout(() => {
+                document.getElementById(`${tech}-response`).classList.remove('live');
+            }, 500);
+        }
+
+        function resetAll() {
+            ['spring', 'node'].forEach(tech => {
+                state[tech].results = [];
+                document.getElementById(`${tech}-response`).textContent = '0';
+                document.getElementById(`${tech}-throughput`).textContent = '0';
+                document.getElementById(`${tech}-success`).textContent = '0';
+                document.getElementById(`${tech}-errors`).textContent = '0';
+                document.getElementById(`${tech}-minmax`).textContent = '0 / 0';
+                document.getElementById(`${tech}-p95`).textContent = '0';
+                document.getElementById(`${tech}-exec-time`).textContent = '0';
+                
+                logToConsole(tech, 'Metrics reset', 'info');
+            });
+
+            document.getElementById('progress').classList.remove('active');
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('completed').textContent = '0';
+            document.getElementById('remaining').textContent = '0';
+        }
+
+        // Initialize with dummy data
+        function loadDummyData() {
+            logToConsole('spring', 'Loading dummy performance data...', 'info');
+            logToConsole('node', 'Loading dummy performance data...', 'info');
+            
+            // Spring Boot dummy data
+            const springDummyResults = [];
+            for (let i = 0; i < 100; i++) {
+                springDummyResults.push({
+                    time: 45 + Math.random() * 30, // 45-75ms range
+                    success: Math.random() > 0.02 // 98% success rate
+                });
+            }
+            state.spring.results = springDummyResults;
+            
+            // Node.js dummy data
+            const nodeDummyResults = [];
+            for (let i = 0; i < 100; i++) {
+                nodeDummyResults.push({
+                    time: 38 + Math.random() * 25, // 38-63ms range
+                    success: Math.random() > 0.03 // 97% success rate
+                });
+            }
+            state.node.results = nodeDummyResults;
+            
+            updateMetrics('spring');
+            updateMetrics('node');
+            
+            // Set dummy execution times
+            document.getElementById('spring-exec-time').textContent = '2.34';
+            document.getElementById('node-exec-time').textContent = '3.78';
+            
+            logToConsole('spring', 'Dummy data loaded: 100 samples', 'success');
+            logToConsole('node', 'Dummy data loaded: 100 samples', 'success');
+        }
+
+        // Initialize
+        logToConsole('spring', 'Spring Boot service initialized', 'info');
+        logToConsole('node', 'Node.js service initialized', 'info');
+        
+        // Load dummy data on startup for testing
+        setTimeout(() => {
+            loadDummyData();
+        }, 500);
+    </script>
+</body>
+</html>

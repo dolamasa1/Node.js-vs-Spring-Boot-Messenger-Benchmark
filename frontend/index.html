@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Performance Benchmark Suite</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <meta name="description" content="Performance testing dashboard for Spring Boot and Node.js Express backends">
+    <meta name="author" content="Performance Testing Suite">
+</head>
+<body>
+    
+    <div class="dashboard">
+        <!-- Settings Button -->
+<div class="settings-btn-wrapper">
+    <button class="btn-settings" id="settings-btn" onclick="app.openSettings()">
+        <span>⚙️</span>
+        <span>Settings</span>
+    </button>
+</div>
+        <div class="main-grid">
+            
+            <!-- Spring Boot Panel -->
+            <div class="tech-panel">
+                <div class="tech-header">
+                    <div class="tech-logo spring-logo">☕</div>
+                    <div class="tech-info">
+                        <h2>Spring Boot</h2>
+                        <span class="tech-status disconnected" id="spring-status">
+                            <span class="status-dot"></span>
+                            Not Connected
+                        </span>
+                    </div>
+                </div>
+
+                <div class="auth-compact">
+                    <div class="auth-row">
+                        <input type="text" id="spring-user" placeholder="Username" value="admin">
+                        <input type="password" id="spring-pass" placeholder="Password" value="password">
+                        <button class="btn-auth" id="spring-login">Connect</button>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Response Time</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-response">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Throughput</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-throughput">0</span>
+                            <span class="metric-unit">req/s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-success">0</span>
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Total Errors</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-errors">0</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Min / Max</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-minmax" style="font-size: 1.25rem;">0 / 0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">P95 Latency</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="spring-p95">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-section">
+                    <div class="console-header">
+                        <span class="console-title">Console Output</span>
+                        <button class="btn-clear-console" id="spring-clear-console">Clear</button>
+                    </div>
+                    <div class="console" id="spring-console">
+                        <div class="console-line info">
+                            <span class="console-timestamp">[00:00:00]</span>
+                            <span>Spring Boot service ready...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Center -->
+            <div class="control-center">
+                <div class="comparison-badge">VS</div>
+                
+                <div class="control-header">
+                    <span class="control-icon">⚡</span>
+                    <h3 class="control-title">Test Controller</h3>
+                    <p class="control-subtitle">Configure and execute benchmarks</p>
+                </div>
+
+                <div class="test-config">
+                    <div class="config-field">
+                        <label>Test Scenario</label>
+                        <select id="scenario">
+                            <option value="post">POST - Send Messages</option>
+                            <option value="get">GET - Fetch Messages</option>
+                            <option value="mixed">Mixed - 50/50 POST/GET</option>
+                            <option value="stress">Stress Test - Rapid Fire</option>
+                        </select>
+                    </div>
+
+                    <div class="config-field">
+                        <label>Request Count</label>
+                        <input type="number" id="count" value="1000" min="10" max="10000" step="10">
+                    </div>
+
+                    <div class="config-field">
+                        <label>Target User ID</label>
+                        <input type="number" id="target" value="2" min="1">
+                    </div>
+
+                    <div class="config-field">
+                        <label>Concurrency Level</label>
+                        <select id="concurrency">
+                            <option value="1">Sequential (1)</option>
+                            <option value="5">Low (5)</option>
+                            <option value="10" selected>Medium (10)</option>
+                            <option value="25">High (25)</option>
+                            <option value="50">Extreme (50)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" id="run-btn">
+                        <span>▶</span>
+                        <span>Run Benchmark</span>
+                    </button>
+                    <button class="btn-secondary" id="reset-btn">
+                        Reset All Metrics
+                    </button>
+                </div>
+
+                <div class="progress-section" id="progress">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Initializing...</p>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <div class="progress-stat-label">Completed</div>
+                            <div class="progress-stat-value" id="completed">0</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="progress-stat-label">Remaining</div>
+                            <div class="progress-stat-value" id="remaining">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Node.js Panel -->
+            <div class="tech-panel">
+                <div class="tech-header">
+                    <div class="tech-logo node-logo">⬢</div>
+                    <div class="tech-info">
+                        <h2>Node.js Express</h2>
+                        <span class="tech-status disconnected" id="node-status">
+                            <span class="status-dot"></span>
+                            Not Connected
+                        </span>
+                    </div>
+                </div>
+
+                <div class="auth-compact">
+                    <div class="auth-row">
+                        <input type="text" id="node-user" placeholder="Username" value="admin">
+                        <input type="password" id="node-pass" placeholder="Password" value="password">
+                        <button class="btn-auth" id="node-login">Connect</button>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Response Time</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-response">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Throughput</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-throughput">0</span>
+                            <span class="metric-unit">req/s</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-success">0</span>
+                            <span class="metric-unit">%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Total Errors</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-errors">0</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">Min / Max</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-minmax" style="font-size: 1.25rem;">0 / 0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">P95 Latency</div>
+                        <div class="metric-value-wrapper">
+                            <span class="metric-value" id="node-p95">0</span>
+                            <span class="metric-unit">ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-section">
+                    <div class="console-header">
+                        <span class="console-title">Console Output</span>
+                        <button class="btn-clear-console" id="node-clear-console">Clear</button>
+                    </div>
+                    <div class="console" id="node-console">
+                        <div class="console-line info">
+                            <span class="console-timestamp">[00:00:00]</span>
+                            <span>Node.js service ready...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- Bottom Navigation Bar -->
+<div class="bottom-nav go-theme" id="bottom-nav">
+    <div class="nav-left">
+        <div class="language-switcher" id="language-switcher">
+            <div class="current-language">
+                <div class="language-icon" id="current-icon">🐹</div>
+                <span class="language-name" id="current-name">Golang</span>
+                <span class="arrow-icon">▼</span>
+            </div>
+            <div class="language-options">
+                <div class="language-option active" data-lang="go">
+                    <div class="option-icon go">🐹</div>
+                    <span class="option-name">Golang</span>
+                </div>
+                <div class="language-option" data-lang="js">
+                    <div class="option-icon js">⚡</div>
+                    <span class="option-name">JavaScript</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-right">
+        <div class="runtime-display">
+            <span class="runtime-label">App Running Time</span>
+            <span class="runtime-value" id="runtime-value">00:00:00.000</span>
+        </div>
+        <div class="runtime-status idle" id="runtime-status">
+            <span class="runtime-dot"></span>
+            <span>Idle</span>
+        </div>
+    </div>
+</div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Configuration Settings</h3>
+                <button class="btn-close" id="close-settings">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Spring Boot Settings -->
+                <div class="settings-section">
+                    <h4 class="section-title">☕ Spring Boot Configuration</h4>
+                    <div class="settings-grid">
+                        <div class="setting-field">
+                            <label>Protocol</label>
+                            <select id="spring-protocol">
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                            </select>
+                        </div>
+                        <div class="setting-field">
+                            <label>Host</label>
+                            <input type="text" id="spring-host" value="localhost" placeholder="localhost or IP">
+                            <span class="setting-description">Use 'localhost' for local or IP/domain for remote</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Port</label>
+                            <input type="number" id="spring-port" value="8080" min="1" max="65535">
+                            <span class="setting-description">Default Spring Boot port: 8080</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Base Path</label>
+                            <input type="text" id="spring-base" value="" placeholder="/api or empty">
+                            <span class="setting-description">Optional base path for all endpoints</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Timeout (ms)</label>
+                            <input type="number" id="spring-timeout" value="30000" min="1000" max="120000" step="1000">
+                            <span class="setting-description">Request timeout in milliseconds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node.js Settings -->
+                <div class="settings-section">
+                    <h4 class="section-title">⬢ Node.js Express Configuration</h4>
+                    <div class="settings-grid">
+                        <div class="setting-field">
+                            <label>Protocol</label>
+                            <select id="node-protocol">
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                            </select>
+                        </div>
+                        <div class="setting-field">
+                            <label>Host</label>
+                            <input type="text" id="node-host" value="localhost" placeholder="localhost or IP">
+                            <span class="setting-description">Use 'localhost' for local or IP/domain for remote</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Port</label>
+                            <input type="number" id="node-port" value="5000" min="1" max="65535">
+                            <span class="setting-description">Default Node.js port: 5000</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Base Path</label>
+                            <input type="text" id="node-base" value="" placeholder="/api or empty">
+                            <span class="setting-description">Optional base path for all endpoints</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Timeout (ms)</label>
+                            <input type="number" id="node-timeout" value="30000" min="1000" max="120000" step="1000">
+                            <span class="setting-description">Request timeout in milliseconds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Settings -->
+                <div class="settings-section">
+                    <h4 class="section-title">🔧 General Settings</h4>
+                    <div class="settings-grid">
+                        <div class="setting-field">
+                            <label>API Version Header</label>
+                            <input type="text" id="api-version" value="1" placeholder="1">
+                            <span class="setting-description">Version number sent in request headers</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Retry on Failure</label>
+                            <select id="retry-enabled">
+                                <option value="false">Disabled</option>
+                                <option value="true">Enabled</option>
+                            </select>
+                            <span class="setting-description">Automatically retry failed requests</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Max Retries</label>
+                            <input type="number" id="max-retries" value="3" min="1" max="10">
+                            <span class="setting-description">Maximum number of retry attempts</span>
+                        </div>
+                        <div class="setting-field">
+                            <label>Console Log Level</label>
+                            <select id="log-level">
+                                <option value="all">All Messages</option>
+                                <option value="errors">Errors Only</option>
+                                <option value="none">Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-secondary" id="cancel-settings">Cancel</button>
+                <button class="btn-modal btn-modal-primary" id="save-settings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Only app.js is loaded - it manages all config internally -->
+    <!-- Load all JavaScript files in order -->
+    <script src="config/endpoints.js"></script>
+    <script src="../middleware/nodejs/performance-client.js"></script>
+    <script src="assets/js/config-manager.js"></script>
+    <script src="assets/js/metrics-display.js"></script>
+    <script src="assets/js/ui-manager.js"></script>
+    <script src="assets/js/performance-tester.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
