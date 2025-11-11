@@ -1,5 +1,5 @@
 class AppController {
-    constructor() {
+   constructor() {
         this.uiManager = new UIManager();
         this.metricsManager = new MetricsDisplay();
         this.performanceTester = new PerformanceTester();
@@ -31,9 +31,18 @@ class AppController {
         
         this.detectCorsIssues();
         
+        // Initialize metrics with empty values
+        this.metricsManager.updateMetricsDisplay('spring', this.metricsManager.createEmptyMetrics());
+        this.metricsManager.updateMetricsDisplay('node', this.metricsManager.createEmptyMetrics());
+        
         // Make app globally available
         window.app = this;
+        window.performanceTester = this.performanceTester;
+        window.metricsManager = this.metricsManager;
+        
+        console.log('App fully initialized with all managers');
     }
+
 
     detectCorsIssues() {
         const currentUrl = window.location.href;

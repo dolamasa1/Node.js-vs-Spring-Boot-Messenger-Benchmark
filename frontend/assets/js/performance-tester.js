@@ -12,6 +12,8 @@ class PerformanceTester {
 
     async executeGoTests(testConfig) {
         console.log('Executing Go tests with config:', testConfig);
+        this.state.testing = true;
+        this.updateProgress(0, testConfig.count, 'both');
         
         const tests = [];
         
@@ -23,11 +25,21 @@ class PerformanceTester {
             tests.push(this.runGoTest('node', testConfig));
         }
 
-        await Promise.all(tests);
+        try {
+            const results = await Promise.all(tests);
+            console.log('All Go tests completed:', results);
+        } catch (error) {
+            console.error('Error in Go tests:', error);
+        } finally {
+            this.state.testing = false;
+            this.updateProgress(testConfig.count, testConfig.count, 'both');
+        }
     }
 
     async executeJSTests(testConfig) {
         console.log('Executing JS tests with config:', testConfig);
+        this.state.testing = true;
+        this.updateProgress(0, testConfig.count, 'both');
         
         const tests = [];
         
@@ -39,11 +51,21 @@ class PerformanceTester {
             tests.push(this.runJSTest('node', testConfig));
         }
 
-        await Promise.all(tests);
+        try {
+            const results = await Promise.all(tests);
+            console.log('All JS tests completed:', results);
+        } catch (error) {
+            console.error('Error in JS tests:', error);
+        } finally {
+            this.state.testing = false;
+            this.updateProgress(testConfig.count, testConfig.count, 'both');
+        }
     }
 
     async runGoTest(tech, testConfig) {
         try {
+            console.log(`Starting Go test for ${tech} with ${testConfig.count} requests`);
+            
             const response = await fetch('http://localhost:8090/api/go-test', {
                 method: 'POST',
                 headers: {
@@ -69,15 +91,19 @@ class PerformanceTester {
             if (result.success) {
                 console.log(`Go test completed for ${tech}:`, result.metrics);
                 
+                // Store results in config
+                if (window.app?.config) {
+                    window.app.config.state[tech].results = result.results || [];
+                }
+                
                 // Update metrics display
-                if (window.app && window.app.metricsManager) {
+                if (window.app?.metricsManager) {
                     window.app.metricsManager.updateMetricsDisplay(tech, result.metrics);
                 }
                 
                 // Log results
-                if (window.app && window.app.uiManager) {
-                    window.app.uiManager.logToConsole(tech, `📊 Go test completed - Success: ${result.metrics.successRate}%`, 'success');
-                    window.app.uiManager.logToConsole(tech, `⏱️  App Runtime: ${result.appRuntime}ms`, 'info');
+                if (window.app?.uiManager) {
+                    window.app.uiManager.logToConsole(tech, `✅ Go test completed - Success: ${result.metrics.successRate}%`, 'success');
                 }
                 
                 return result.metrics;
@@ -86,8 +112,13 @@ class PerformanceTester {
             }
         } catch (error) {
             console.error(`Go test failed for ${tech}:`, error);
-            if (window.app && window.app.uiManager) {
+            if (window.app?.uiManager) {
                 window.app.uiManager.logToConsole(tech, `❌ Go test failed: ${error.message}`, 'error');
+            }
+            
+            // Update with empty metrics on failure
+            if (window.app?.metricsManager) {
+                window.app.metricsManager.updateMetricsDisplay(tech, window.app.metricsManager.createEmptyMetrics());
             }
             throw error;
         }
@@ -95,6 +126,8 @@ class PerformanceTester {
 
     async runJSTest(tech, testConfig) {
         try {
+            console.log(`Starting JS test for ${tech} with ${testConfig.count} requests`);
+            
             // Execute load test and get results
             const results = await this.performanceClient.executeLoadTest({
                 endpoint: testConfig[tech].endpoint,
@@ -107,52 +140,38 @@ class PerformanceTester {
             });
 
             // Store results in config
-            if (window.app && window.app.config) {
+            if (window.app?.config) {
                 window.app.config.state[tech].results = results;
             }
 
             // Calculate metrics
             const metrics = this.performanceClient.calculateMetrics(results);
             
-            // Measure performance
-            const performance = await this.performanceClient.measurePerformance({
-                endpoint: testConfig[tech].endpoint,
-                token: testConfig[tech].token,
-                scenario: testConfig.scenario,
-                count: testConfig.count,
-                target: testConfig.target,
-                concurrency: testConfig.concurrency,
-                tech: tech
-            });
-
             // Update UI
-            if (window.app && window.app.metricsManager) {
+            if (window.app?.metricsManager) {
                 window.app.metricsManager.updateMetricsDisplay(tech, metrics);
             }
 
             // Log results
-            if (window.app && window.app.uiManager) {
-                window.app.uiManager.logToConsole(tech, `📊 JS test completed - Success: ${metrics.successRate}%`, 'success');
-                window.app.uiManager.logToConsole(tech, `⏱️  Total Duration: ${performance.totalDuration}ms`, 'info');
+            if (window.app?.uiManager) {
+                window.app.uiManager.logToConsole(tech, `✅ JS test completed - Success: ${metrics.successRate}%`, 'success');
+                window.app.uiManager.logToConsole(tech, `⚡ Total Requests: ${metrics.totalRequests}`, 'info');
             }
 
             return {
-                metrics: {
-                    ...metrics,
-                    performanceAnalysis: {
-                        totalDuration: performance.totalDuration,
-                        httpDuration: performance.httpDuration,
-                        languageDuration: performance.languageDuration,
-                        efficiencyScore: performance.efficiencyScore
-                    }
-                },
-                appRuntime: performance.totalDuration
+                metrics: metrics,
+                results: results
             };
 
         } catch (error) {
             console.error(`JS test failed for ${tech}:`, error);
-            if (window.app && window.app.uiManager) {
+            if (window.app?.uiManager) {
                 window.app.uiManager.logToConsole(tech, `❌ JS test failed: ${error.message}`, 'error');
+            }
+            
+            // Update with empty metrics on failure
+            if (window.app?.metricsManager) {
+                window.app.metricsManager.updateMetricsDisplay(tech, window.app.metricsManager.createEmptyMetrics());
             }
             throw error;
         }
@@ -162,20 +181,18 @@ class PerformanceTester {
         this.state.progress.completed = completed;
         this.state.progress.total = total;
         
-        if (window.app && window.app.uiManager) {
+        if (window.app?.uiManager) {
             window.app.uiManager.updateProgress(completed, total, tech);
         }
     }
 
-    // Helper method to get test status
     getTestStatus() {
         return this.state.testing ? 'running' : 'idle';
     }
 
-    // Method to cancel ongoing tests
     cancelTests() {
         this.state.testing = false;
-        if (window.app && window.app.uiManager) {
+        if (window.app?.uiManager) {
             window.app.uiManager.logToConsole('spring', 'Tests cancelled by user', 'warning');
             window.app.uiManager.logToConsole('node', 'Tests cancelled by user', 'warning');
         }
