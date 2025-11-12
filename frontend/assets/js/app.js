@@ -17,31 +17,90 @@ class AppController {
         this.initializeApp();
     }
 
-    initializeApp() {
-        console.log('App initialized successfully');
-        
-        // Set default values
-        this.uiManager.elements.springUser.value = 'admin';
-        this.uiManager.elements.springPass.value = 'password';
-        this.uiManager.elements.nodeUser.value = 'admin';
-        this.uiManager.elements.nodePass.value = 'password';
-        
-        this.uiManager.logToConsole('spring', 'Spring Boot service ready...', 'info');
-        this.uiManager.logToConsole('node', 'Node.js service ready...', 'info');
-        
-        this.detectCorsIssues();
-        
-        // Initialize metrics with empty values
-        this.metricsManager.updateMetricsDisplay('spring', this.metricsManager.createEmptyMetrics());
-        this.metricsManager.updateMetricsDisplay('node', this.metricsManager.createEmptyMetrics());
-        
-        // Make app globally available
-        window.app = this;
-        window.performanceTester = this.performanceTester;
-        window.metricsManager = this.metricsManager;
-        
-        console.log('App fully initialized with all managers');
+initializeApp() {
+    console.log('App initialized successfully');
+    
+    // Set default values
+    this.uiManager.elements.springUser.value = 'admin';
+    this.uiManager.elements.springPass.value = 'password';
+    this.uiManager.elements.nodeUser.value = 'admin';
+    this.uiManager.elements.nodePass.value = 'password';
+    
+    this.uiManager.logToConsole('spring', 'Spring Boot service ready...', 'info');
+    this.uiManager.logToConsole('node', 'Node.js service ready...', 'info');
+    
+    this.detectCorsIssues();
+    this.checkMiddlewareStatus(); // Add this line
+    
+    // Initialize metrics with empty values
+    this.metricsManager.updateMetricsDisplay('spring', this.metricsManager.createEmptyMetrics());
+    this.metricsManager.updateMetricsDisplay('node', this.metricsManager.createEmptyMetrics());
+    
+    // Make app globally available
+    window.app = this;
+    window.performanceTester = this.performanceTester;
+    window.metricsManager = this.metricsManager;
+    
+    console.log('App fully initialized with all managers');
+}
+
+// Add this method to check middleware status
+async checkMiddlewareStatus() {
+    try {
+        // Check Go middleware
+        const goResponse = await fetch('http://localhost:8090/api/health');
+        if (goResponse.ok) {
+            this.uiManager.logToConsole('spring', '✅ Go middleware is running', 'success');
+            this.uiManager.logToConsole('node', '✅ Go middleware is running', 'success');
+        }
+    } catch (error) {
+        this.uiManager.logToConsole('spring', '❌ Go middleware is not running on port 8090', 'error');
+        this.uiManager.logToConsole('node', '❌ Go middleware is not running on port 8090', 'error');
     }
+
+    try {
+        // Check JS middleware  
+        const jsResponse = await fetch('http://localhost:3000/api/health');
+        if (jsResponse.ok) {
+            this.uiManager.logToConsole('spring', '✅ JavaScript middleware is running', 'success');
+            this.uiManager.logToConsole('node', '✅ JavaScript middleware is running', 'success');
+        }
+    } catch (error) {
+        this.uiManager.logToConsole('spring', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
+        this.uiManager.logToConsole('node', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
+    }
+}
+
+// Add this method to check middleware status
+async checkMiddlewareStatus() {
+    try {
+        // Check Go middleware using gateway client
+        const goHealthy = await this.performanceTester.performanceClient.checkGoHealth();
+        if (goHealthy) {
+            this.uiManager.logToConsole('spring', '✅ Go middleware is running', 'success');
+            this.uiManager.logToConsole('node', '✅ Go middleware is running', 'success');
+        } else {
+            throw new Error('Go middleware not healthy');
+        }
+    } catch (error) {
+        this.uiManager.logToConsole('spring', '❌ Go middleware is not running on port 8090', 'error');
+        this.uiManager.logToConsole('node', '❌ Go middleware is not running on port 8090', 'error');
+    }
+
+    try {
+        // Check JS middleware using gateway client
+        const jsHealthy = await this.performanceTester.performanceClient.checkJSHealth();
+        if (jsHealthy) {
+            this.uiManager.logToConsole('spring', '✅ JavaScript middleware is running', 'success');
+            this.uiManager.logToConsole('node', '✅ JavaScript middleware is running', 'success');
+        } else {
+            throw new Error('JS middleware not healthy');
+        }
+    } catch (error) {
+        this.uiManager.logToConsole('spring', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
+        this.uiManager.logToConsole('node', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
+    }
+}
 
 
     detectCorsIssues() {

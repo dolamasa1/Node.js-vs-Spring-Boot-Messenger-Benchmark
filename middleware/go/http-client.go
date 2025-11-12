@@ -26,6 +26,14 @@ func NewHTTPClient() *HTTPClient {
 	}
 }
 
+type RequestResult struct {
+	Success    bool
+	StatusCode int
+	Duration   time.Duration
+	Timing     TimingResult
+	Error      string
+}
+
 type TimingResult struct {
 	TotalDuration      time.Duration
 	HTTPDuration       time.Duration
@@ -35,15 +43,6 @@ type TimingResult struct {
 	StringFormatTime   time.Duration
 	DataProcessingTime time.Duration
 }
-
-type RequestResult struct {
-	Success    bool
-	StatusCode int
-	Duration   time.Duration
-	Timing     TimingResult
-	Error      string
-}
-
 type Metrics struct {
 	TotalRequests      int
 	SuccessfulRequests int
