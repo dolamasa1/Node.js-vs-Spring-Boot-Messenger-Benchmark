@@ -13,6 +13,14 @@ type HTTPClient struct {
 	client *http.Client
 }
 
+type TimingStats struct {
+	Avg float64 `json:"avg"`
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+	P95 float64 `json:"p95"`
+	P99 float64 `json:"p99"`
+}
+
 func NewHTTPClient() *HTTPClient {
 	return &HTTPClient{
 		client: &http.Client{
@@ -27,48 +35,28 @@ func NewHTTPClient() *HTTPClient {
 }
 
 type RequestResult struct {
-	Success    bool
-	StatusCode int
-	Duration   time.Duration
-	Timing     TimingResult
-	Error      string
+	Success    bool    `json:"success"`
+	StatusCode int     `json:"statusCode"`
+	Duration   float64 `json:"duration"` // Duration in milliseconds
+	Error      string  `json:"error,omitempty"`
 }
 
-type TimingResult struct {
-	TotalDuration      time.Duration
-	HTTPDuration       time.Duration
-	LanguageDuration   time.Duration
-	JSONMarshalTime    time.Duration
-	JSONUnmarshalTime  time.Duration
-	StringFormatTime   time.Duration
-	DataProcessingTime time.Duration
-}
 type Metrics struct {
-	TotalRequests      int
-	SuccessfulRequests int
-	FailedRequests     int
-	SuccessRate        float64
-	Throughput         float64
-	TotalTime          TimingStats
-	HTTPTime           TimingStats
-	LanguageTime       TimingStats
-	JSONMarshalTime    TimingStats
-	JSONUnmarshalTime  TimingStats
+	TotalRequests      int         `json:"totalRequests"`
+	SuccessfulRequests int         `json:"successfulRequests"`
+	FailedRequests     int         `json:"failedRequests"`
+	SuccessRate        float64     `json:"successRate"`
+	Throughput         float64     `json:"throughput"`
+	TotalTime          TimingStats `json:"totalTime"`
 }
 
-type TimingStats struct {
-	Avg float64 `json:"avg"`
-	Min float64 `json:"min"`
-	Max float64 `json:"max"`
-	P95 float64 `json:"p95"`
-	P99 float64 `json:"p99"`
-}
-
-func (h *HTTPClient) ExecuteLoadTest(config TestRequest) []RequestResult {
+func (h *HTTPClient) ExecuteLoadTest(config TestRequest) ([]RequestResult, time.Duration) {
 	var results []RequestResult
 	var mu sync.Mutex
 	semaphore := make(chan struct{}, config.Concurrency)
 	var wg sync.WaitGroup
+
+	startTime := time.Now()
 
 	for i := 0; i < config.Count; i++ {
 		wg.Add(1)
@@ -78,7 +66,7 @@ func (h *HTTPClient) ExecuteLoadTest(config TestRequest) []RequestResult {
 			defer wg.Done()
 			defer func() { <-semaphore }()
 
-			result := h.makeRequestWithTiming(config, index)
+			result := h.makeRequest(config, index)
 
 			mu.Lock()
 			results = append(results, result)
@@ -87,86 +75,72 @@ func (h *HTTPClient) ExecuteLoadTest(config TestRequest) []RequestResult {
 	}
 
 	wg.Wait()
-	return results
+	totalDuration := time.Since(startTime)
+	return results, totalDuration
 }
 
-func (h *HTTPClient) makeRequestWithTiming(config TestRequest, index int) RequestResult {
-	var timing TimingResult
-	totalStart := time.Now()
+func (h *HTTPClient) makeRequest(config TestRequest, index int) RequestResult {
+	startTime := time.Now()
 
 	result := RequestResult{}
 
-	defer func() {
-		timing.TotalDuration = time.Since(totalStart)
-		timing.LanguageDuration = timing.JSONMarshalTime + timing.JSONUnmarshalTime +
-			timing.StringFormatTime + timing.DataProcessingTime
-		result.Timing = timing
-		result.Duration = timing.TotalDuration
-	}()
-
-	// String formatting timing
+	// Build URL based on scenario
 	var url string
-	timing.StringFormatTime = measureTime(func() {
-		if config.Scenario == "post" || (config.Scenario == "mixed" && index%2 == 0) {
-			url = fmt.Sprintf("%s/api/message/send?toUserId=%s&message=TestMessage_%d_%d",
-				config.Endpoint, config.Target, index, time.Now().UnixNano())
-		} else {
-			url = fmt.Sprintf("%s/api/message/message?type=user&target=%s&page=0",
-				config.Endpoint, config.Target)
-		}
-	})
+	var method string
 
-	// Request creation timing
-	var req *http.Request
-	timing.DataProcessingTime += measureTime(func() {
-		var err error
-		if config.Scenario == "post" || (config.Scenario == "mixed" && index%2 == 0) {
-			req, err = http.NewRequest("POST", url, nil)
-		} else {
-			req, err = http.NewRequest("GET", url, nil)
-		}
-		if err != nil {
-			result.Error = fmt.Sprintf("Request creation failed: %v", err)
-			return
-		}
+	if config.Scenario == "post" || (config.Scenario == "mixed" && index%2 == 0) {
+		method = "POST"
+		url = fmt.Sprintf("%s/api/message/send?toUserId=%s&message=TestMessage_%d_%d",
+			config.Endpoint, config.Target, index, time.Now().UnixNano())
+	} else {
+		method = "GET"
+		url = fmt.Sprintf("%s/api/message/message?type=user&target=%s&page=0",
+			config.Endpoint, config.Target)
+	}
 
-		req.Header.Set("Authorization", "Bearer "+config.Token)
-		req.Header.Set("version", "1")
-		req.Header.Set("Content-Type", "application/json")
-	})
-
-	if result.Error != "" {
+	// Create request
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
 		result.Success = false
+		result.Error = fmt.Sprintf("Request creation failed: %v", err)
+		result.Duration = float64(time.Since(startTime).Milliseconds())
 		return result
 	}
 
-	// HTTP request timing
-	httpStart := time.Now()
+	// Set headers
+	req.Header.Set("Authorization", "Bearer "+config.Token)
+	req.Header.Set("version", "1")
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute request
 	resp, err := h.client.Do(req)
-	timing.HTTPDuration = time.Since(httpStart)
+	duration := time.Since(startTime)
 
 	if err != nil {
 		result.Success = false
 		result.Error = err.Error()
+		result.Duration = float64(duration.Milliseconds())
 		return result
 	}
 	defer resp.Body.Close()
 
+	// Read response body
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		result.Success = false
+		result.Error = fmt.Sprintf("Response read failed: %v", err)
+		result.Duration = float64(duration.Milliseconds())
+		return result
+	}
+
 	result.Success = resp.StatusCode >= 200 && resp.StatusCode < 300
 	result.StatusCode = resp.StatusCode
-
-	// Response processing timing
-	timing.DataProcessingTime += measureTime(func() {
-		_, err := io.ReadAll(resp.Body)
-		if err != nil {
-			result.Error = fmt.Sprintf("Response read failed: %v", err)
-		}
-	})
+	result.Duration = float64(duration.Milliseconds())
 
 	return result
 }
 
-func (h *HTTPClient) CalculateMetrics(results []RequestResult) Metrics {
+func (h *HTTPClient) CalculateMetrics(results []RequestResult, totalDuration time.Duration) Metrics {
 	metrics := Metrics{
 		TotalRequests: len(results),
 	}
@@ -175,6 +149,7 @@ func (h *HTTPClient) CalculateMetrics(results []RequestResult) Metrics {
 		return metrics
 	}
 
+	// Count successful and failed requests
 	var successfulRequests []RequestResult
 	for _, result := range results {
 		if result.Success {
@@ -185,69 +160,72 @@ func (h *HTTPClient) CalculateMetrics(results []RequestResult) Metrics {
 	}
 
 	metrics.SuccessfulRequests = len(successfulRequests)
-	metrics.SuccessRate = float64(metrics.SuccessfulRequests) / float64(metrics.TotalRequests) * 100
-
-	if len(successfulRequests) == 0 {
-		return metrics
+	if metrics.TotalRequests > 0 {
+		metrics.SuccessRate = float64(metrics.SuccessfulRequests) / float64(metrics.TotalRequests) * 100
 	}
 
-	// Calculate timing metrics
-	h.calculateTimingMetrics(&metrics, successfulRequests)
-	h.calculateThroughput(&metrics, results)
+	// Calculate throughput
+	if totalDuration > 0 {
+		metrics.Throughput = float64(metrics.TotalRequests) / totalDuration.Seconds()
+	}
+
+	// Calculate timing metrics from successful requests
+	if len(successfulRequests) > 0 {
+		h.calculateTimingMetrics(&metrics, successfulRequests)
+	}
 
 	return metrics
 }
 
 func (h *HTTPClient) calculateTimingMetrics(metrics *Metrics, results []RequestResult) {
-	totalDurations := make([]float64, len(results))
-	httpDurations := make([]float64, len(results))
-	languageDurations := make([]float64, len(results))
-	jsonMarshalDurations := make([]float64, len(results))
-	jsonUnmarshalDurations := make([]float64, len(results))
+	if len(results) == 0 {
+		return
+	}
 
+	// Extract durations
+	durations := make([]float64, len(results))
 	for i, result := range results {
-		totalDurations[i] = result.Timing.TotalDuration.Seconds() * 1000
-		httpDurations[i] = result.Timing.HTTPDuration.Seconds() * 1000
-		languageDurations[i] = result.Timing.LanguageDuration.Seconds() * 1000
-		jsonMarshalDurations[i] = result.Timing.JSONMarshalTime.Seconds() * 1000
-		jsonUnmarshalDurations[i] = result.Timing.JSONUnmarshalTime.Seconds() * 1000
+		durations[i] = result.Duration
 	}
 
-	sort.Float64s(totalDurations)
-	sort.Float64s(httpDurations)
-	sort.Float64s(languageDurations)
-	sort.Float64s(jsonMarshalDurations)
-	sort.Float64s(jsonUnmarshalDurations)
+	// Sort for percentile calculations
+	sort.Float64s(durations)
 
-	metrics.TotalTime = h.calculateStats(totalDurations)
-	metrics.HTTPTime = h.calculateStats(httpDurations)
-	metrics.LanguageTime = h.calculateStats(languageDurations)
-	metrics.JSONMarshalTime = h.calculateStats(jsonMarshalDurations)
-	metrics.JSONUnmarshalTime = h.calculateStats(jsonUnmarshalDurations)
-}
-
-func (h *HTTPClient) calculateStats(durations []float64) TimingStats {
-	if len(durations) == 0 {
-		return TimingStats{}
-	}
-
+	// Calculate basic statistics
 	var sum float64
+	min := durations[0]
+	max := durations[0]
+
 	for _, d := range durations {
 		sum += d
+		if d < min {
+			min = d
+		}
+		if d > max {
+			max = d
+		}
 	}
 
-	return TimingStats{
-		Avg: h.calculatePercentile(durations, 50),
-		Min: durations[0],
-		Max: durations[len(durations)-1],
-		P95: h.calculatePercentile(durations, 95),
-		P99: h.calculatePercentile(durations, 99),
+	avg := sum / float64(len(durations))
+	p95 := h.calculatePercentile(durations, 95)
+	p99 := h.calculatePercentile(durations, 99)
+
+	metrics.TotalTime = TimingStats{
+		Avg: avg,
+		Min: min,
+		Max: max,
+		P95: p95,
+		P99: p99,
 	}
 }
 
 func (h *HTTPClient) calculatePercentile(sortedArray []float64, percentile float64) float64 {
 	if len(sortedArray) == 0 {
 		return 0
+	}
+
+	if len(sortedArray) == 1 {
+		return sortedArray[0]
 	}
 
 	index := (percentile / 100) * float64(len(sortedArray)-1)
@@ -260,27 +238,4 @@ func (h *HTTPClient) calculatePercentile(sortedArray []float64, percentile float
 
 	weight := index - float64(lowerIndex)
 	return sortedArray[lowerIndex]*(1-weight) + sortedArray[upperIndex]*weight
-}
-
-func (h *HTTPClient) calculateThroughput(metrics *Metrics, results []RequestResult) {
-	if len(results) < 2 {
-		metrics.Throughput = 0
-		return
-	}
-
-	// Calculate time window from first to last request
-	if len(results) > 1 {
-		startTime := results[0].Timing.TotalDuration
-		endTime := results[len(results)-1].Timing.TotalDuration
-		timeWindow := (endTime - startTime).Seconds()
-		if timeWindow > 0 {
-			metrics.Throughput = float64(len(results)) / timeWindow
-		}
-	}
-}
-
-func measureTime(fn func()) time.Duration {
-	start := time.Now()
-	fn()
-	return time.Since(start)
 }
