@@ -48,3 +48,88 @@ Add any other context about the problem here.
 ## 🎯 Reproduction Code
 ```bash
 # Commands to reproduce
+
+📝 Checklist
+I've included all relevant environment details
+
+I've provided clear reproduction steps
+
+I've quantified the performance impact
+
+I've checked existing issues for duplicates
+```
+---
+
+## **.github/ISSUE_TEMPLATE/feature_request.md**
+
+```markdown
+---
+name: 🚀 Feature Request
+about: Suggest a new backend, test scenario, or performance improvement
+title: '[FEATURE] '
+labels: enhancement, needs-review
+assignees: ''
+
+---
+
+## 🎯 Feature Type
+- [ ] New Backend Implementation
+- [ ] Performance Test Scenario
+- [ ] Frontend Real-time Feature
+- [ ] Measurement Accuracy Improvement
+- [ ] Documentation/Example
+- [ ] Other
+
+## 🔬 Problem Statement
+A clear and concise description of what problem this feature solves or what gap it fills in performance measurement.
+
+## 💡 Proposed Solution
+A clear and concise description of what you want to happen.
+
+## 📊 Performance Justification
+**How does this feature improve measurement accuracy or usefulness?**
+- [ ] Adds new backend technology comparison
+- [ ] Improves real-world scenario simulation
+- [ ] Reduces measurement overhead
+- [ ] Enhances statistical significance
+- [ ] Provides better visualization/interpretation
+
+## 🎪 Use Case Examples
+Describe specific scenarios where this feature would be valuable:
+1. When testing [specific workload]...
+2. When comparing [specific technologies]...
+3. When measuring [specific metric]...
+
+## 🔧 Technical Specifications
+**For Backend Implementations:**
+- Technology: [e.g., Go, Python, .NET]
+- Framework: [e.g., Gin, FastAPI, ASP.NET Core]
+- Key dependencies: [list major libraries]
+
+**For Test Scenarios:**
+- Workload type: [e.g., chat bursts, file uploads, presence updates]
+- Concurrent users: [estimated range]
+- Data volume: [message size, frequency]
+
+## 📈 Expected Impact
+**What performance insights will this provide?**
+- New comparison dimensions: [e.g., memory efficiency, startup time]
+- Real-world relevance: [e.g., e-commerce, social media, enterprise]
+- Measurement improvements: [e.g., reduced variance, better percentiles]
+
+## 🔄 Alternatives Considered
+A clear and concise description of any alternative solutions or features you've considered.
+
+## 📚 Additional Context
+Add any other context or screenshots about the feature request here.
+
+## 🤝 Contribution Willingness
+- [ ] I'm willing to implement this feature
+- [ ] I need guidance to implement this feature
+- [ ] I'm requesting this as a user need
+
+## 📝 Checklist
+- [ ] This feature aligns with project's scientific measurement goals
+- [ ] This doesn't introduce artificial optimizations
+- [ ] This maintains consistent API contracts
+- [ ] This provides genuine performance insights
