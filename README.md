@@ -1,5 +1,3 @@
-You're absolutely right! I missed the screenshot reference. Let me update the README to include the screenshot call:
-
 # 🚀 API Performance Benchmark Suite
 
 A comprehensive performance testing platform that compares **Spring Boot vs Node.js** backends with real-time analytics and advanced metrics visualization.
