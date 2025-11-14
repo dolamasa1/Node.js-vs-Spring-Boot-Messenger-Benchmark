@@ -1,0 +1,89 @@
+
+{
+  "backends": {
+    "spring": {
+      "protocol": "http",
+      "host": "localhost",
+      "port": 8080,
+      "basePath": "",
+      "endpoints": {
+        "auth": "/api/auth/login",
+        "sendMessage": "/api/message/send",
+        "getMessages": "/api/message/message",
+        "health": "/api/health"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "version": "1"
+      }
+    },
+    "node": {
+      "protocol": "http",
+      "host": "localhost",
+      "port": 5000,
+      "basePath": "",
+      "endpoints": {
+        "auth": "/api/auth/login",
+        "sendMessage": "/api/message/send",
+        "getMessages": "/api/message/message",
+        "health": "/api/health"
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "version": "1"
+      }
+    }
+  },
+  "middleware": {
+    "go": {
+      "protocol": "http",
+      "host": "localhost",
+      "port": 8090,
+      "endpoints": {
+        "test": "/api/go-test",
+        "health": "/api/health"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    "js": {
+      "protocol": "http",
+      "host": "localhost",
+      "port": 3000,
+      "endpoints": {
+        "test": "/api/js-test",
+        "health": "/api/health"
+      },
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "scenarios": {
+    "post": {
+      "name": "POST Messages",
+      "description": "Send multiple messages via POST"
+    },
+    "get": {
+      "name": "GET Messages",
+      "description": "Fetch messages via GET"
+    },
+    "mixed": {
+      "name": "Mixed Workload",
+      "description": "50% POST, 50% GET requests"
+    },
+    "stress": {
+      "name": "Stress Test",
+      "description": "High concurrency rapid fire"
+    }
+  },
+  "settings": {
+    "defaultConcurrency": 10,
+    "defaultRequestCount": 1000,
+    "defaultTargetUser": "2",
+    "requestTimeout": 30000,
+    "maxRetries": 3,
+    "retryEnabled": false
+  }
+}
