@@ -1,4 +1,4 @@
-# 🚀 API Performance Benchmark Suite
+# 🚀 Spring Boot vs Node.js Messenger Benchmark
 
 A comprehensive performance testing platform that compares **Spring Boot vs Node.js** backends with real-time analytics and advanced metrics visualization.
 
@@ -7,18 +7,11 @@ A comprehensive performance testing platform that compares **Spring Boot vs Node
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18-green)
 ![Go](https://img.shields.io/badge/Go-1.21-blue)
-
-![Architecture](https://img.shields.io/badge/Architecture-Modular-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-2.0-brightgreen)
-![Backends](https://img.shields.io/badge/Backends-Spring%20Boot%20%7C%20Node.js-blue)
-![Middleware](https://img.shields.io/badge/Middleware-Go%20Only-orange)
-
-
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange)
 
 ## 📋 Overview
 
-Enterprise-grade performance testing dashboard featuring dual backend implementations with identical API contracts, enabling precise technology comparison and real-time performance analytics.
+Enterprise-grade performance testing dashboard featuring dual backend implementations with identical API contracts, enabling precise technology comparison and real-time performance analytics through real-world messenger application testing.
 
 ## 🖼️ Dashboard Preview
 
@@ -26,8 +19,10 @@ Enterprise-grade performance testing dashboard featuring dual backend implementa
 
 ## 🏗️ Architecture
 
+![Architecture Diagram](assets/architecture-diagram.png)
+
 ```
-api-performance-benchmark/
+Spring Boot vs Node.js Messenger Benchmark/
 ├── 🎨 frontend/                 # Performance Testing Dashboard (Port 8000)
 ├── ⚙️ middleware/go/           # Go Performance Engine (Port 8090)
 ├── ☕ backend/springboot/       # Spring Boot Backend (Port 8080 + 5001)
@@ -45,8 +40,8 @@ api-performance-benchmark/
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/dolamasa1/API-Performance-Benchmark.git
-cd API-Performance-Benchmark
+git clone https://github.com/dolamasa1/Spring-Boot-vs-Node.js-messenger.git
+cd Spring-Boot-vs-Node.js-messenger
 
 # Initialize submodules
 git submodule update --init --recursive
@@ -120,6 +115,12 @@ Open `http://localhost:8000` in your browser.
 - **GET Tests**: User lists and message history
 - **Mixed Loads**: Real-world request patterns
 - **Stress Testing**: High-concurrency performance limits
+
+### 💬 Messenger Features
+- **Real-time Chat**: WebSocket messaging with user presence
+- **Group Management**: Multi-user chat rooms
+- **File Sharing**: Images, voice messages, documents
+- **JWT Authentication**: Secure user management
 
 ## 🔌 API Endpoints (Both Backends)
 
@@ -224,7 +225,7 @@ netstat -tulpn | grep -E ':(8080|5000|8090|8000)'
 
 ## 🔮 Roadmap
 
-### Next Version (v2.1)
+### Next Version (v1.1)
 - [ ] Advanced message encryption
 - [ ] Push notifications integration
 - [ ] Microservices architecture variants
@@ -235,9 +236,13 @@ netstat -tulpn | grep -E ':(8080|5000|8090|8000)'
 - [ ] Different database systems (PostgreSQL, MongoDB)
 - [ ] Advanced caching strategies (Redis)
 
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
 ## 📄 License
 
-**MIT License** - See LICENSE file for full details.
+**MIT License** - See [LICENSE](LICENSE) file for full details.
 
 ## 👨‍💻 Author
 
