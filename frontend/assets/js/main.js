@@ -1,7 +1,9 @@
-// Simple module loader that doesn't use dynamic imports
+// Enhanced module loader with retry mechanism
 class SimpleAppLoader {
     constructor() {
         this.loaded = false;
+        this.retryCount = 0;
+        this.maxRetries = 3;
     }
 
     loadApp() {
@@ -9,25 +11,20 @@ class SimpleAppLoader {
             console.log('🚀 Starting application initialization...');
             
             // Check if all required classes are available
-            if (typeof UIManager === 'undefined') {
-                console.error('❌ UIManager not found');
-                return false;
-            }
-            if (typeof MetricsDisplay === 'undefined') {
-                console.error('❌ MetricsDisplay not found');
-                return false;
-            }
-            if (typeof PerformanceTester === 'undefined') {
-                console.error('❌ PerformanceTester not found');
-                return false;
-            }
-            if (typeof ConfigManager === 'undefined') {
-                console.error('❌ ConfigManager not found');
-                return false;
-            }
-            if (typeof AppController === 'undefined') {
-                console.error('❌ AppController not found');
-                return false;
+            const requiredClasses = ['UIManager', 'MetricsDisplay', 'PerformanceTester', 'ConfigManager', 'AppController'];
+            const missingClasses = requiredClasses.filter(cls => typeof window[cls] === 'undefined');
+            
+            if (missingClasses.length > 0) {
+                console.error('❌ Missing classes:', missingClasses);
+                
+                if (this.retryCount < this.maxRetries) {
+                    this.retryCount++;
+                    console.log(`🔄 Retrying initialization (attempt ${this.retryCount}/${this.maxRetries})...`);
+                    setTimeout(() => this.loadApp(), 500);
+                    return false;
+                } else {
+                    throw new Error(`Failed to load: ${missingClasses.join(', ')}`);
+                }
             }
 
             console.log('✅ All dependencies loaded, initializing AppController...');
@@ -69,21 +66,29 @@ class SimpleAppLoader {
     }
 }
 
-// Load the application when all scripts are ready
+// Enhanced initialization with dependency checking
 function initializeApp() {
-    // Wait a bit to ensure all scripts are loaded
-    setTimeout(() => {
-        const loader = new SimpleAppLoader();
-        const success = loader.loadApp();
-        
-        if (!success) {
-            console.log('🔄 Retrying application initialization...');
-            // Retry after a short delay
-            setTimeout(() => {
-                loader.loadApp();
-            }, 1000);
+    // Check if all scripts are loaded
+    function areScriptsLoaded() {
+        return typeof UIManager !== 'undefined' &&
+               typeof MetricsDisplay !== 'undefined' &&
+               typeof PerformanceTester !== 'undefined' &&
+               typeof ConfigManager !== 'undefined' &&
+               typeof AppController !== 'undefined';
+    }
+
+    function attemptInitialization() {
+        if (areScriptsLoaded()) {
+            const loader = new SimpleAppLoader();
+            loader.loadApp();
+        } else {
+            console.log('⏳ Waiting for scripts to load...');
+            setTimeout(attemptInitialization, 100);
         }
-    }, 100);
+    }
+
+    // Start initialization
+    setTimeout(attemptInitialization, 100);
 }
 
 // Start initialization when DOM is ready

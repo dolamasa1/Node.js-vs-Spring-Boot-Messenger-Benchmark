@@ -10,57 +10,45 @@ class PerformanceTester {
         this.performanceClient = new PerformanceClient();
     }
 
-    async executeGoTests(testConfig) {
-        console.log('Orchestrating Go tests with config:', testConfig);
-        this.state.testing = true;
-        this.updateProgress(0, 100, 'both'); // Progress based on middleware completion
-        
-        const tests = [];
-        
-        if (testConfig.spring.connected) {
-            tests.push(this.runMiddlewareTest('spring', testConfig, 'go'));
-        }
-        
-        if (testConfig.node.connected) {
-            tests.push(this.runMiddlewareTest('node', testConfig, 'go'));
-        }
-
-        try {
-            const results = await Promise.all(tests);
-            console.log('All Go middleware tests completed:', results);
-        } catch (error) {
-            console.error('Error in Go middleware tests:', error);
-        } finally {
-            this.state.testing = false;
-            this.updateProgress(100, 100, 'both');
-        }
+async executeGoTests(testConfig) {
+    console.log('Orchestrating Go tests with config:', testConfig);
+    this.state.testing = true;
+    this.updateProgress(0, 100, 'both');
+    
+    const tests = [];
+    
+    // Check if services are connected before running tests
+    const connectedTechs = [];
+    if (testConfig.spring.connected && testConfig.spring.token) {
+        tests.push(this.runMiddlewareTest('spring', testConfig, 'go'));
+        connectedTechs.push('spring');
+    }
+    
+    if (testConfig.node.connected && testConfig.node.token) {
+        tests.push(this.runMiddlewareTest('node', testConfig, 'go'));
+        connectedTechs.push('node');
     }
 
-    async executeJSTests(testConfig) {
-        console.log('Orchestrating JS tests with config:', testConfig);
-        this.state.testing = true;
-        this.updateProgress(0, 100, 'both');
-        
-        const tests = [];
-        
-        if (testConfig.spring.connected) {
-            tests.push(this.runMiddlewareTest('spring', testConfig, 'js'));
-        }
-        
-        if (testConfig.node.connected) {
-            tests.push(this.runMiddlewareTest('node', testConfig, 'js'));
-        }
-
-        try {
-            const results = await Promise.all(tests);
-            console.log('All JS middleware tests completed:', results);
-        } catch (error) {
-            console.error('Error in JS middleware tests:', error);
-        } finally {
-            this.state.testing = false;
-            this.updateProgress(100, 100, 'both');
-        }
+    if (tests.length === 0) {
+        this.uiManager.logToConsole('spring', '❌ No connected services available for testing', 'error');
+        this.uiManager.logToConsole('node', '❌ No connected services available for testing', 'error');
+        this.state.testing = false;
+        return;
     }
+
+    console.log(`Running tests for: ${connectedTechs.join(', ')}`);
+
+    try {
+        const results = await Promise.all(tests);
+        console.log('All Go middleware tests completed:', results);
+    } catch (error) {
+        console.error('Error in Go middleware tests:', error);
+    } finally {
+        this.state.testing = false;
+        this.updateProgress(100, 100, 'both');
+    }
+}
+
 
     async runMiddlewareTest(tech, testConfig, middlewareType) {
         try {

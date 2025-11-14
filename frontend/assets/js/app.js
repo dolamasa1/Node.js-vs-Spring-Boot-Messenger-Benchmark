@@ -1,5 +1,8 @@
 class AppController {
    constructor() {
+        // Make app globally available IMMEDIATELY
+        window.app = this;
+        
         this.uiManager = new UIManager();
         this.metricsManager = new MetricsDisplay();
         this.performanceTester = new PerformanceTester();
@@ -17,91 +20,78 @@ class AppController {
         this.initializeApp();
     }
 
-initializeApp() {
-    console.log('App initialized successfully');
-    
-    // Set default values
-    this.uiManager.elements.springUser.value = 'admin';
-    this.uiManager.elements.springPass.value = 'password';
-    this.uiManager.elements.nodeUser.value = 'admin';
-    this.uiManager.elements.nodePass.value = 'password';
-    
-    this.uiManager.logToConsole('spring', 'Spring Boot service ready...', 'info');
-    this.uiManager.logToConsole('node', 'Node.js service ready...', 'info');
-    
-    this.detectCorsIssues();
-    this.checkMiddlewareStatus(); // Add this line
-    
-    // Initialize metrics with empty values
-    this.metricsManager.updateMetricsDisplay('spring', this.metricsManager.createEmptyMetrics());
-    this.metricsManager.updateMetricsDisplay('node', this.metricsManager.createEmptyMetrics());
-    
-    // Make app globally available
-    window.app = this;
-    window.performanceTester = this.performanceTester;
-    window.metricsManager = this.metricsManager;
-    
-    console.log('App fully initialized with all managers');
-}
-
-// Add this method to check middleware status
-async checkMiddlewareStatus() {
-    try {
-        // Check Go middleware
-        const goResponse = await fetch('http://localhost:8090/api/health');
-        if (goResponse.ok) {
-            this.uiManager.logToConsole('spring', '✅ Go middleware is running', 'success');
-            this.uiManager.logToConsole('node', '✅ Go middleware is running', 'success');
+    async initializeApp() {
+        try {
+            console.log('App initialized successfully');
+            
+            // Set default values 
+            this.uiManager.elements.springUser.value = 'aa';
+            this.uiManager.elements.springPass.value = 'aa';
+            this.uiManager.elements.nodeUser.value = 'aa';
+            this.uiManager.elements.nodePass.value = 'aa';
+            
+            // Set default test values
+            this.uiManager.elements.count.value = 1000;
+            this.uiManager.elements.target.value = '2';
+            this.uiManager.elements.concurrency.value = 10;
+            
+            this.uiManager.logToConsole('spring', 'Spring Boot service ready...', 'info');
+            this.uiManager.logToConsole('node', 'Node.js service ready...', 'info');
+            
+            this.detectCorsIssues();
+            await this.checkMiddlewareStatus();
+            
+            // Initialize metrics with empty values
+            this.resetMetricsDisplay();
+            
+            console.log('App fully initialized with all managers and configuration');
+        } catch (error) {
+            console.error('Failed to initialize app:', error);
+            this.uiManager.logToConsole('spring', `Initialization error: ${error.message}`, 'error');
+            this.uiManager.logToConsole('node', `Initialization error: ${error.message}`, 'error');
         }
-    } catch (error) {
-        this.uiManager.logToConsole('spring', '❌ Go middleware is not running on port 8090', 'error');
-        this.uiManager.logToConsole('node', '❌ Go middleware is not running on port 8090', 'error');
     }
 
-    try {
-        // Check JS middleware  
-        const jsResponse = await fetch('http://localhost:3000/api/health');
-        if (jsResponse.ok) {
-            this.uiManager.logToConsole('spring', '✅ JavaScript middleware is running', 'success');
-            this.uiManager.logToConsole('node', '✅ JavaScript middleware is running', 'success');
-        }
-    } catch (error) {
-        this.uiManager.logToConsole('spring', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
-        this.uiManager.logToConsole('node', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
-    }
-}
-
-// Add this method to check middleware status
-async checkMiddlewareStatus() {
-    try {
-        // Check Go middleware using gateway client
-        const goHealthy = await this.performanceTester.performanceClient.checkGoHealth();
-        if (goHealthy) {
-            this.uiManager.logToConsole('spring', '✅ Go middleware is running', 'success');
-            this.uiManager.logToConsole('node', '✅ Go middleware is running', 'success');
-        } else {
-            throw new Error('Go middleware not healthy');
-        }
-    } catch (error) {
-        this.uiManager.logToConsole('spring', '❌ Go middleware is not running on port 8090', 'error');
-        this.uiManager.logToConsole('node', '❌ Go middleware is not running on port 8090', 'error');
+    resetMetricsDisplay() {
+        const emptyMetrics = this.metricsManager.createEmptyMetrics();
+        
+        // Reset Spring metrics with animation
+        this.uiManager.resetMetrics('spring');
+        this.metricsManager.updateMetricsDisplay('spring', emptyMetrics);
+        
+        // Reset Node metrics with animation  
+        this.uiManager.resetMetrics('node');
+        this.metricsManager.updateMetricsDisplay('node', emptyMetrics);
+        
+        // Reset progress
+        this.uiManager.updateProgress(0, 0, '');
+        this.uiManager.elements.progress.classList.remove('active');
+        this.uiManager.elements.progressFill.style.width = '0%';
+        this.uiManager.elements.completed.textContent = '0';
+        this.uiManager.elements.remaining.textContent = '0';
+        this.uiManager.elements.progressText.textContent = 'Initializing...';
+        
+        console.log('Metrics display reset to zero with animations');
     }
 
-    try {
-        // Check JS middleware using gateway client
-        const jsHealthy = await this.performanceTester.performanceClient.checkJSHealth();
-        if (jsHealthy) {
-            this.uiManager.logToConsole('spring', '✅ JavaScript middleware is running', 'success');
-            this.uiManager.logToConsole('node', '✅ JavaScript middleware is running', 'success');
-        } else {
-            throw new Error('JS middleware not healthy');
+    // SINGLE checkMiddlewareStatus method - NO DUPLICATES
+    async checkMiddlewareStatus() {
+        try {
+            // Check Go middleware only
+            const goHealthy = await this.performanceTester.performanceClient.checkGoHealth();
+            if (goHealthy) {
+                this.uiManager.logToConsole('spring', '✓ Go middleware is running', 'success');
+                this.uiManager.logToConsole('node', '✓ Go middleware is running', 'success');
+            } else {
+                throw new Error('Go middleware not healthy');
+            }
+        } catch (error) {
+            this.uiManager.logToConsole('spring', '❌ Go middleware is not running on port 8090', 'error');
+            this.uiManager.logToConsole('node', '❌ Go middleware is not running on port 8090', 'error');
         }
-    } catch (error) {
-        this.uiManager.logToConsole('spring', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
-        this.uiManager.logToConsole('node', '⚠️ JavaScript middleware is not running on port 3000', 'warning');
-    }
-}
 
+        // Completely removed JavaScript middleware check
+    }
 
     detectCorsIssues() {
         const currentUrl = window.location.href;
@@ -112,26 +102,39 @@ async checkMiddlewareStatus() {
     }
 
     async authenticate(tech) {
-        const username = this.uiManager.elements[`${tech}User`]?.value;
-        const password = this.uiManager.elements[`${tech}Pass`]?.value;
-        
-        if (!username || !password) {
-            this.uiManager.logToConsole(tech, '❌ Please enter both username and password', 'error');
-            return;
-        }
+        try {
+            const username = this.uiManager.elements[`${tech}User`]?.value;
+            const password = this.uiManager.elements[`${tech}Pass`]?.value;
+            
+            if (!username || !password) {
+                this.uiManager.logToConsole(tech, '❌ Please enter both username and password', 'error');
+                return;
+            }
 
-        this.uiManager.updateConnectionStatus(tech, false, 'Connecting...');
-        this.uiManager.logToConsole(tech, `🔐 Attempting authentication for user: ${username}`, 'info');
-        
-        const result = await this.config.authenticate(tech, username, password);
-        
-        if (result.success) {
-            this.uiManager.updateConnectionStatus(tech, true, 'Authentication successful');
-        } else {
-            this.uiManager.updateConnectionStatus(tech, false, `Authentication failed: ${result.error}`);
+            // Check if config is available
+            if (!this.config) {
+                this.uiManager.logToConsole(tech, '❌ Configuration not available', 'error');
+                return;
+            }
+
+            this.uiManager.updateConnectionStatus(tech, false, 'Connecting...');
+            this.uiManager.logToConsole(tech, `🔐 Attempting authentication for user: ${username}`, 'info');
+            
+            const result = await this.config.authenticate(tech, username, password);
+            
+            if (result.success) {
+                this.uiManager.updateConnectionStatus(tech, true, 'Authentication successful');
+                this.uiManager.logToConsole(tech, '✅ Authentication successful', 'success');
+            } else {
+                this.uiManager.updateConnectionStatus(tech, false, `Authentication failed: ${result.error}`);
+                this.uiManager.logToConsole(tech, `❌ Authentication failed: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            console.error(`Authentication error for ${tech}:`, error);
+            this.uiManager.updateConnectionStatus(tech, false, 'Connection error');
+            this.uiManager.logToConsole(tech, `❌ Connection error: ${error.message}`, 'error');
         }
     }
-
 
     getTestConfig() {
         return {
@@ -293,16 +296,19 @@ async checkMiddlewareStatus() {
         }
     }
 
-
     openSettings() {
         this.uiManager.openSettings();
     }
 
     // Enhanced test execution with better error handling
     async executeTests() {
-        if (!this.config.spring.connected && !this.config.node.connected) {
-            this.uiManager.logToConsole('spring', '❌ Please connect at least one service before running tests', 'error');
-            this.uiManager.logToConsole('node', '❌ Please connect at least one service before running tests', 'error');
+        // Check if at least one service is connected and authenticated
+        const springConnected = this.config.spring.connected && this.config.spring.token;
+        const nodeConnected = this.config.node.connected && this.config.node.token;
+        
+        if (!springConnected && !nodeConnected) {
+            this.uiManager.logToConsole('spring', '❌ Please connect and authenticate at least one service before running tests', 'error');
+            this.uiManager.logToConsole('node', '❌ Please connect and authenticate at least one service before running tests', 'error');
             return;
         }
 
@@ -324,11 +330,8 @@ async checkMiddlewareStatus() {
         const testConfig = this.getTestConfig();
 
         try {
-            if (this.config.currentLanguage === 'go') {
-                await this.performanceTester.executeGoTests(testConfig);
-            } else {
-                await this.performanceTester.executeJSTests(testConfig);
-            }
+            // Always use Go middleware since we removed JS middleware
+            await this.performanceTester.executeGoTests(testConfig);
         } catch (error) {
             this.uiManager.logToConsole('spring', `Test execution error: ${error.message}`, 'error');
             this.uiManager.logToConsole('node', `Test execution error: ${error.message}`, 'error');
@@ -342,35 +345,6 @@ async checkMiddlewareStatus() {
             this.uiManager.logToConsole('node', `✅ Benchmark completed | Runtime: ${runtimeFormatted}`, 'success');
         }
     }
-
-    // Enhanced authentication with better feedback
-    async authenticate(tech) {
-        const username = this.uiManager.elements[`${tech}User`]?.value;
-        const password = this.uiManager.elements[`${tech}Pass`]?.value;
-        
-        if (!username || !password) {
-            this.uiManager.logToConsole(tech, '❌ Please enter both username and password', 'error');
-            return;
-        }
-
-        this.uiManager.updateConnectionStatus(tech, false, 'Connecting...');
-        this.uiManager.logToConsole(tech, `🔐 Attempting authentication for user: ${username}`, 'info');
-        
-        try {
-            const result = await this.config.authenticate(tech, username, password);
-            
-            if (result.success) {
-                this.uiManager.updateConnectionStatus(tech, true, 'Connected');
-                this.uiManager.logToConsole(tech, '✅ Authentication successful', 'success');
-            } else {
-                this.uiManager.updateConnectionStatus(tech, false, 'Authentication failed');
-                this.uiManager.logToConsole(tech, `❌ Authentication failed: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            this.uiManager.updateConnectionStatus(tech, false, 'Connection error');
-            this.uiManager.logToConsole(tech, `❌ Connection error: ${error.message}`, 'error');
-        }
-    }
 }
 
 // Initialize app when DOM is ready
@@ -382,4 +356,3 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('❌ Failed to initialize app:', error);
     }
 });
-

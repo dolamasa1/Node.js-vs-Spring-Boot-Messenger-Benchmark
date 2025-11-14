@@ -13,7 +13,7 @@
     <div class="dashboard">
         <!-- Settings Button -->
 <div class="settings-btn-wrapper">
-    <button class="btn-settings" id="settings-btn" onclick="app.openSettings()">
+<button class="btn-settings" id="settings-btn">
         <span>⚙️</span>
         <span>Settings</span>
     </button>
@@ -411,15 +411,18 @@
         </div>
     </div>
 
-    <!-- Only app.js is loaded - it manages all config internally -->
-    <!-- Load all JavaScript files in order -->
-    <script src="config/endpoints.js"></script>
-    <script src="assets/js/performance-client.js"></script>
-    <script src="assets/js/config-manager.js"></script>
-    <script src="assets/js/metrics-display.js"></script>
-    <script src="assets/js/ui-manager.js"></script>
-    <script src="assets/js/performance-tester.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/main.js"></script>
+
+
+<!-- Load endpoints config FIRST -->
+<script src="../config/endpoints.js"></script>
+
+<!-- Then load all other scripts in correct order -->
+<script src="assets/js/config-manager.js"></script>
+<script src="assets/js/metrics-display.js"></script>
+<script src="assets/js/ui-manager.js"></script>
+<script src="assets/js/performance-client.js"></script>
+<script src="assets/js/performance-tester.js"></script>
+<script src="assets/js/app.js"></script>
+
 </body>
 </html>

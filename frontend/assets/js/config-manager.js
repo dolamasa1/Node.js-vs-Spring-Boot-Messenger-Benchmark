@@ -3,30 +3,30 @@ class ConfigManager {
         this.state = {
             currentLanguage: 'go',
             spring: {
-                token: null,
                 connected: false,
-                endpoint: 'http://localhost:8080',
-                results: [],
+                token: null,
+                endpoint: '',
                 config: {
                     protocol: 'http',
                     host: 'localhost',
                     port: 8080,
                     basePath: '',
                     timeout: 30000
-                }
+                },
+                results: []
             },
             node: {
-                token: null,
                 connected: false,
-                endpoint: 'http://localhost:5000',
-                results: [],
+                token: null,
+                endpoint: '',
                 config: {
                     protocol: 'http',
                     host: 'localhost',
                     port: 5000,
                     basePath: '',
                     timeout: 30000
-                }
+                },
+                results: []
             },
             settings: {
                 apiVersion: '1',
@@ -36,9 +36,52 @@ class ConfigManager {
             }
         };
         
-        this.endpointManager = new EndpointManager();
+        // Initialize endpoints
+        this.rebuildEndpoint('spring');
+        this.rebuildEndpoint('node');
     }
 
+async authenticate(tech, username, password) {
+    try {
+        if (!this.state[tech]) {
+            throw new Error(`Technology ${tech} not configured`);
+        }
+
+        // Build auth URL directly
+        const config = this.state[tech].config;
+        const authUrl = `${config.protocol}://${config.host}:${config.port}${config.basePath}/api/auth/login`;
+        
+        console.log(`Attempting authentication for ${tech} at: ${authUrl}`);
+
+        const response = await fetch(authUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'version': this.state.settings.apiVersion
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        console.log(`Auth response status for ${tech}:`, response.status);
+
+        if (response.ok) {
+            const data = await response.json();
+            this.state[tech].token = data.token;
+            this.state[tech].connected = true;
+            console.log(`✓ ${tech} authentication successful`);
+            return { success: true, token: data.token };
+        } else {
+            const errorText = await response.text();
+            console.log(`Auth failed for ${tech}:`, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+    } catch (error) {
+        console.error(`Authentication error for ${tech}:`, error);
+        this.state[tech].connected = false;
+        this.state[tech].token = null;
+        return { success: false, error: error.message };
+    }
+}
     get currentLanguage() {
         return this.state.currentLanguage;
     }
@@ -56,48 +99,25 @@ class ConfigManager {
     }
 
     updateTechConfig(tech, config) {
-        this.state[tech].config = { ...this.state[tech].config, ...config };
-        this.rebuildEndpoint(tech);
+        if (this.state[tech]) {
+            this.state[tech].config = { ...this.state[tech].config, ...config };
+            this.rebuildEndpoint(tech);
+        }
     }
 
     rebuildEndpoint(tech) {
-        const config = this.state[tech].config;
-        this.state[tech].endpoint = `${config.protocol}://${config.host}:${config.port}${config.basePath}`;
+        if (this.state[tech]) {
+            const config = this.state[tech].config;
+            this.state[tech].endpoint = `${config.protocol}://${config.host}:${config.port}${config.basePath}`;
+        }
     }
 
     updateSettings(settings) {
         this.state.settings = { ...this.state.settings, ...settings };
     }
 
-    async authenticate(tech, username, password) {
-        try {
-            const authUrl = this.endpointManager.getBackendUrl(tech, 'auth');
-            
-            const response = await fetch(authUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'version': this.state.settings.apiVersion
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.state[tech].token = data.token;
-                this.state[tech].connected = true;
-                return { success: true, token: data.token };
-            } else {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-        } catch (error) {
-            this.state[tech].connected = false;
-            return { success: false, error: error.message };
-        }
-    }
-
     isConnected(tech) {
-        return this.state[tech].connected;
+        return this.state[tech]?.connected || false;
     }
 
     getConnectedTechnologies() {
@@ -106,6 +126,7 @@ class ConfigManager {
         if (this.state.node.connected) connected.push('node');
         return connected;
     }
+
     resetAll() {
         this.state.spring.results = [];
         this.state.node.results = [];
@@ -120,22 +141,19 @@ class ConfigManager {
     }
 
     getTechConfig(tech) {
-        return { ...this.state[tech].config };
+        return this.state[tech] ? { ...this.state[tech].config } : null;
     }
 
     // Helper method to validate configuration
     validateConfig() {
         const errors = [];
         
-        // Validate Spring Boot config
         if (!this.state.spring.config.host) {
             errors.push('Spring Boot host is required');
         }
         if (!this.state.spring.config.port) {
             errors.push('Spring Boot port is required');
         }
-
-        // Validate Node.js config
         if (!this.state.node.config.host) {
             errors.push('Node.js host is required');
         }
@@ -175,5 +193,10 @@ class ConfigManager {
         if (config.currentLanguage) {
             this.state.currentLanguage = config.currentLanguage;
         }
+    }
+
+    // Remove this method since we don't have endpointsConfig
+    updateFromEndpointsConfig() {
+        console.log('Skipping endpoints config update - using direct configuration');
     }
 }

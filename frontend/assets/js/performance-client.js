@@ -1,40 +1,31 @@
-// Gateway client - only routes to middleware, no testing logic
 class PerformanceClient {
     constructor() {
-        // No testing logic here - just configuration
+        // Simple gateway client
     }
 
-    // Only used for JavaScript middleware communication
-    async executeJSTest(config) {
+    async checkGoHealth() {
         try {
-            const response = await fetch('http://localhost:3000/api/js-test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(config)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            // Direct health check without relying on endpointsConfig
+            const response = await fetch('http://localhost:8090/api/health');
+            if (response.ok) {
+                const data = await response.json();
+                return data.status === 'healthy';
             }
-
-            return await response.json();
+            return false;
         } catch (error) {
-            console.error('JS middleware test failed:', error);
-            throw error;
+            console.log('Go health check failed:', error.message);
+            return false;
         }
     }
 
-    // Only used for Go middleware communication  
-    async executeGoTest(config) {
+    async executeGoTest(testConfig) {
         try {
             const response = await fetch('http://localhost:8090/api/go-test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(config)
+                body: JSON.stringify(testConfig)
             });
 
             if (!response.ok) {
@@ -48,22 +39,5 @@ class PerformanceClient {
         }
     }
 
-    // Simple health check methods
-    async checkGoHealth() {
-        try {
-            const response = await fetch('http://localhost:8090/api/health');
-            return response.ok;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    async checkJSHealth() {
-        try {
-            const response = await fetch('http://localhost:3000/api/health');
-            return response.ok;
-        } catch (error) {
-            return false;
-        }
-    }
+    // Remove JavaScript-related methods since we're ignoring JS middleware
 }

@@ -1,8 +1,23 @@
 class UIManager {
     constructor() {
         this.elements = {};
+        this.currentValues = {
+            spring: this.createEmptyCurrentValues(),
+            node: this.createEmptyCurrentValues()
+        };
         this.initializeElements();
         this.setupEventListeners();
+    }
+
+    createEmptyCurrentValues() {
+        return {
+            response: '0',
+            throughput: '0',
+            success: '0',
+            errors: '0',
+            minmax: '0.00 / 0.00',
+            p95: '0'
+        };
     }
     
     initializeElements() {
@@ -95,102 +110,306 @@ class UIManager {
         }
     }
     
-setupEventListeners() {
-    console.log('Setting up event listeners...');
-    
-    // Authentication - use direct function calls
-    this.elements.springLogin?.addEventListener('click', () => {
+    setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
+        // Authentication - with better error handling
+        this.elements.springLogin?.addEventListener('click', () => {
+            this.handleAuthClick('spring');
+        });
+        
+        this.elements.nodeLogin?.addEventListener('click', () => {
+            this.handleAuthClick('node');
+        });
+        
+        // Console clearing
+        this.elements.springClearConsole?.addEventListener('click', () => this.clearConsole('spring'));
+        this.elements.nodeClearConsole?.addEventListener('click', () => this.clearConsole('node'));
+        
+        // Test controls
+        this.elements.runBtn?.addEventListener('click', () => {
+            this.handleRunTests();
+        });
+        
+        this.elements.resetBtn?.addEventListener('click', () => {
+            this.handleResetAll();
+        });
+        
+        // Settings modal
+        this.elements.settingsBtn?.addEventListener('click', () => this.openSettings());
+        this.elements.closeSettings?.addEventListener('click', () => this.closeSettings());
+        this.elements.cancelSettings?.addEventListener('click', () => this.closeSettings());
+        this.elements.saveSettings?.addEventListener('click', () => {
+            this.handleSaveSettings();
+        });
+        
+        // Close modal when clicking outside
+        this.elements.settingsModal?.addEventListener('click', (e) => {
+            if (e.target === this.elements.settingsModal) {
+                this.closeSettings();
+            }
+        });
+
+        // Language switcher
+        this.elements.languageSwitcher?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleLanguageSwitcher();
+        });
+        
+        // Language option clicks
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const lang = option.getAttribute('data-lang');
+                this.handleLanguageSwitch(lang);
+            });
+        });
+        
+        // Close language switcher when clicking outside
+        document.addEventListener('click', () => {
+            this.closeLanguageSwitcher();
+        });
+        
+        console.log('Event listeners setup complete');
+    }
+
+    // Event handler methods
+    handleAuthClick(tech) {
         if (window.app && window.app.authenticate) {
-            window.app.authenticate('spring');
+            window.app.authenticate(tech);
         } else {
-            console.error('App controller not available');
-            this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
+            console.error('App controller not available for authentication');
+            this.logToConsole(tech, '❌ Application not ready. Please refresh the page.', 'error');
         }
-    });
-    
-    this.elements.nodeLogin?.addEventListener('click', () => {
-        if (window.app && window.app.authenticate) {
-            window.app.authenticate('node');
-        } else {
-            console.error('App controller not available');
-            this.logToConsole('node', '❌ Application not ready. Please refresh the page.', 'error');
-        }
-    });
-    
-    // Console clearing
-    this.elements.springClearConsole?.addEventListener('click', () => this.clearConsole('spring'));
-    this.elements.nodeClearConsole?.addEventListener('click', () => this.clearConsole('node'));
-    
-    // Test controls
-    this.elements.runBtn?.addEventListener('click', () => {
+    }
+
+    handleRunTests() {
         if (window.app && window.app.executeTests) {
             window.app.executeTests();
         } else {
-            console.error('App controller not available');
+            console.error('App controller not available for test execution');
             this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
             this.logToConsole('node', '❌ Application not ready. Please refresh the page.', 'error');
         }
-    });
-    
-    this.elements.resetBtn?.addEventListener('click', () => {
+    }
+
+    handleResetAll() {
         if (window.app && window.app.resetAll) {
             window.app.resetAll();
         } else {
-            console.error('App controller not available');
+            console.error('App controller not available for reset');
             this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
             this.logToConsole('node', '❌ Application not ready. Please refresh the page.', 'error');
         }
-    });
-    
-    // Settings modal
-    this.elements.settingsBtn?.addEventListener('click', () => this.openSettings());
-    this.elements.closeSettings?.addEventListener('click', () => this.closeSettings());
-    this.elements.cancelSettings?.addEventListener('click', () => this.closeSettings());
-    this.elements.saveSettings?.addEventListener('click', () => {
+    }
+
+    handleSaveSettings() {
         if (window.app && window.app.saveSettings) {
             window.app.saveSettings();
         } else {
-            console.error('App controller not available');
+            console.error('App controller not available for saving settings');
             this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
         }
-    });
-    
-    // Close modal when clicking outside
-    this.elements.settingsModal?.addEventListener('click', (e) => {
-        if (e.target === this.elements.settingsModal) {
-            this.closeSettings();
-        }
-    });
+    }
 
-    // Language switcher
-    this.elements.languageSwitcher?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.toggleLanguageSwitcher();
-    });
-    
-    // Language option clicks
-    document.querySelectorAll('.language-option').forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const lang = option.getAttribute('data-lang');
-            if (window.app && window.app.switchLanguage) {
-                window.app.switchLanguage(lang);
+    handleLanguageSwitch(lang) {
+        if (window.app && window.app.switchLanguage) {
+            window.app.switchLanguage(lang);
+        } else {
+            console.error('App controller not available for language switch');
+            this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
+        }
+    }
+
+    // Enhanced metrics display with counter animations
+    updateMetricsDisplay(tech, metrics) {
+        try {
+            const elements = this.getMetricElements(tech);
+            
+            // Remove any existing animation classes
+            Object.values(elements).forEach(element => {
+                if (element) {
+                    element.classList.remove('animating', 'pulse', 'live');
+                }
+            });
+
+            // Use requestAnimationFrame for smooth animations
+            requestAnimationFrame(() => {
+                // Define metric order for sequential animation
+                const metricList = [
+                    { 
+                        element: elements.response, 
+                        value: metrics.avgResponseTime?.toFixed(2) || '0', 
+                        current: this.currentValues[tech].response || '0', 
+                        isMinMax: false 
+                    },
+                    { 
+                        element: elements.throughput, 
+                        value: metrics.throughput?.toFixed(2) || '0', 
+                        current: this.currentValues[tech].throughput || '0', 
+                        isMinMax: false 
+                    },
+                    { 
+                        element: elements.success, 
+                        value: metrics.successRate?.toFixed(1) || '0', 
+                        current: this.currentValues[tech].success || '0', 
+                        isMinMax: false 
+                    },
+                    { 
+                        element: elements.errors, 
+                        value: metrics.errorCount?.toString() || '0', 
+                        current: this.currentValues[tech].errors || '0', 
+                        isMinMax: false 
+                    },
+                    { 
+                        element: elements.minmax, 
+                        value: `${metrics.minResponseTime?.toFixed(2) || '0'} / ${metrics.maxResponseTime?.toFixed(2) || '0'}`, 
+                        current: this.currentValues[tech].minmax || '0 / 0', 
+                        isMinMax: true 
+                    },
+                    { 
+                        element: elements.p95, 
+                        value: metrics.p95ResponseTime?.toFixed(2) || '0', 
+                        current: this.currentValues[tech].p95 || '0', 
+                        isMinMax: false 
+                    }
+                ];
+
+                metricList.forEach((metric, index) => {
+                    if (metric.element) {
+                        const delay = index * 100; // 0.1s sequential delay
+                        setTimeout(() => {
+                            metric.element.classList.add('animating');
+                            if (metric.isMinMax) {
+                                this.animateMinMax(metric.element, metric.current, metric.value);
+                            } else {
+                                this.animateStepCounter(metric.element, metric.value);
+                            }
+                            
+                            setTimeout(() => {
+                                metric.element.classList.remove('animating');
+                            }, 1200);
+                        }, delay);
+                    }
+                });
+
+                // Update current values
+                this.updateCurrentMetricValues(tech, metrics);
+            });
+        } catch (error) {
+            console.error(`Error updating metrics for ${tech}:`, error);
+        }
+    }
+
+    // Counter animation method
+    animateStepCounter(element, targetValue, duration = 1200) {
+        const startValue = parseFloat(element.textContent) || 0;
+        const target = parseFloat(targetValue) || 0;
+        if (startValue === target) return;
+        
+        const startTime = performance.now();
+        const decimalPlaces = targetValue.toString().includes('.') ? targetValue.toString().split('.')[1].length : 0;
+        
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function for smooth animation
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            const currentValue = startValue + (target - startValue) * easeOutQuart;
+            
+            element.textContent = currentValue.toFixed(decimalPlaces);
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
             } else {
-                console.error('App controller not available');
-                this.logToConsole('spring', '❌ Application not ready. Please refresh the page.', 'error');
+                element.textContent = target.toFixed(decimalPlaces);
+            }
+        };
+        
+        requestAnimationFrame(animate);
+    }
+
+    // Special animation for min/max values with counting
+    animateMinMax(element, oldValue, newValue, duration = 1200) {
+        const [oldMinStr, oldMaxStr] = oldValue.split(' / ');
+        const [newMinStr, newMaxStr] = newValue.split(' / ');
+        const oldMin = parseFloat(oldMinStr) || 0;
+        const oldMax = parseFloat(oldMaxStr) || 0;
+        const newMin = parseFloat(newMinStr) || 0;
+        const newMax = parseFloat(newMaxStr) || 0;
+        
+        if (oldMin === newMin && oldMax === newMax) return;
+        
+        const startTime = performance.now();
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+            
+            const currentMin = oldMin + (newMin - oldMin) * easeOutQuart;
+            const currentMax = oldMax + (newMax - oldMax) * easeOutQuart;
+            
+            element.textContent = `${currentMin.toFixed(2)} / ${currentMax.toFixed(2)}`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                element.textContent = newValue;
+            }
+        };
+        
+        requestAnimationFrame(animate);
+    }
+
+    // Update current metric values storage
+    updateCurrentMetricValues(tech, metrics) {
+        this.currentValues[tech] = {
+            response: metrics.avgResponseTime?.toFixed(2) || '0',
+            throughput: metrics.throughput?.toFixed(2) || '0',
+            success: metrics.successRate?.toFixed(1) || '0',
+            errors: metrics.errorCount?.toString() || '0',
+            minmax: `${metrics.minResponseTime?.toFixed(2) || '0'} / ${metrics.maxResponseTime?.toFixed(2) || '0'}`,
+            p95: metrics.p95ResponseTime?.toFixed(2) || '0'
+        };
+    }
+
+    // Enhanced reset with animations
+    resetMetrics(tech) {
+        const elements = this.getMetricElements(tech);
+        
+        // Reset current values
+        this.currentValues[tech] = this.createEmptyCurrentValues();
+        
+        // Animate each metric to zero
+        const metricList = [
+            { element: elements.response, value: '0', isMinMax: false },
+            { element: elements.throughput, value: '0', isMinMax: false },
+            { element: elements.success, value: '0', isMinMax: false },
+            { element: elements.errors, value: '0', isMinMax: false },
+            { element: elements.minmax, value: '0.00 / 0.00', isMinMax: true },
+            { element: elements.p95, value: '0', isMinMax: false }
+        ];
+
+        metricList.forEach((metric, index) => {
+            if (metric.element) {
+                const delay = index * 100;
+                setTimeout(() => {
+                    metric.element.classList.add('animating');
+                    if (metric.isMinMax) {
+                        this.animateMinMax(metric.element, metric.element.textContent, metric.value);
+                    } else {
+                        this.animateStepCounter(metric.element, metric.value);
+                    }
+                    setTimeout(() => {
+                        metric.element.classList.remove('animating');
+                    }, 1200);
+                }, delay);
             }
         });
-    });
-    
-    // Close language switcher when clicking outside
-    document.addEventListener('click', () => {
-        this.closeLanguageSwitcher();
-    });
-    
-    console.log('Event listeners setup complete');
-}
+    }
 
-
+    // Rest of the methods remain the same...
     toggleLanguageSwitcher() {
         this.elements.languageSwitcher?.classList.toggle('open');
     }
@@ -229,22 +448,6 @@ setupEventListeners() {
 
     closeSettings() {
         this.elements.settingsModal?.classList.remove('active');
-    }
-
-    updateMetrics(tech, metrics) {
-        try {
-            const elements = this.getMetricElements(tech);
-            if (elements.response) elements.response.textContent = metrics.avgResponseTime?.toFixed(2) || '0';
-            if (elements.throughput) elements.throughput.textContent = metrics.throughput?.toFixed(2) || '0';
-            if (elements.success) elements.success.textContent = metrics.successRate?.toFixed(1) || '0';
-            if (elements.errors) elements.errors.textContent = metrics.errorCount || '0';
-            if (elements.minmax) {
-                elements.minmax.textContent = `${metrics.minResponseTime?.toFixed(2) || '0'} / ${metrics.maxResponseTime?.toFixed(2) || '0'}`;
-            }
-            if (elements.p95) elements.p95.textContent = metrics.p95ResponseTime?.toFixed(2) || '0';
-        } catch (error) {
-            console.error(`Error updating metrics for ${tech}:`, error);
-        }
     }
 
     getMetricElements(tech) {

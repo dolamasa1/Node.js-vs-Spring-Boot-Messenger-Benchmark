@@ -22,46 +22,54 @@ class MetricsDisplay {
         };
     }
 
-    calculateMetrics(results) {
-        if (!results || results.length === 0) {
-            return this.createEmptyMetrics();
-        }
-
-        const successfulRequests = results.filter(r => r.success);
-        const failedRequests = results.filter(r => !r.success);
-        const responseTimes = successfulRequests.map(r => r.duration);
-
-        if (responseTimes.length === 0) {
-            return this.createEmptyMetrics();
-        }
-
-        const sortedTimes = [...responseTimes].sort((a, b) => a - b);
-        const totalTime = responseTimes.reduce((sum, time) => sum + time, 0);
-        const avgResponseTime = totalTime / responseTimes.length;
-        const minResponseTime = Math.min(...responseTimes);
-        const maxResponseTime = Math.max(...responseTimes);
-        const p95ResponseTime = this.calculatePercentile(sortedTimes, 95);
-        const p99ResponseTime = this.calculatePercentile(sortedTimes, 99);
-
-        const timeWindow = Math.max(...results.map(r => new Date(r.timestamp).getTime())) - 
-                          Math.min(...results.map(r => new Date(r.timestamp).getTime()));
-        const throughput = timeWindow > 0 ? (results.length / (timeWindow / 1000)) : 0;
-        const successRate = (successfulRequests.length / results.length) * 100;
-
-        return {
-            totalRequests: results.length,
-            successfulRequests: successfulRequests.length,
-            failedRequests: failedRequests.length,
-            successRate: Number(successRate.toFixed(2)),
-            throughput: Number(throughput.toFixed(2)),
-            avgResponseTime: Number(avgResponseTime.toFixed(2)),
-            minResponseTime: Number(minResponseTime.toFixed(2)),
-            maxResponseTime: Number(maxResponseTime.toFixed(2)),
-            p95ResponseTime: Number(p95ResponseTime.toFixed(2)),
-            p99ResponseTime: Number(p99ResponseTime.toFixed(2)),
-            errorCount: failedRequests.length
-        };
+calculateMetrics(results) {
+    if (!results || results.length === 0) {
+        return this.createEmptyMetrics();
     }
+
+    const successfulRequests = results.filter(r => r.success);
+    const failedRequests = results.filter(r => !r.success);
+    
+    // Fix: Check if we have actual timing data
+    const hasValidTiming = successfulRequests.some(r => r.duration > 0);
+    
+    if (!hasValidTiming || successfulRequests.length === 0) {
+        const metrics = this.createEmptyMetrics();
+        metrics.totalRequests = results.length;
+        metrics.successfulRequests = successfulRequests.length;
+        metrics.failedRequests = failedRequests.length;
+        metrics.successRate = results.length > 0 ? (successfulRequests.length / results.length) * 100 : 0;
+        metrics.errorCount = failedRequests.length;
+        return metrics;
+    }
+
+    const responseTimes = successfulRequests.map(r => r.duration);
+    const sortedTimes = [...responseTimes].sort((a, b) => a - b);
+    const totalTime = responseTimes.reduce((sum, time) => sum + time, 0);
+    const avgResponseTime = totalTime / responseTimes.length;
+    const minResponseTime = Math.min(...responseTimes);
+    const maxResponseTime = Math.max(...responseTimes);
+    const p95ResponseTime = this.calculatePercentile(sortedTimes, 95);
+    const p99ResponseTime = this.calculatePercentile(sortedTimes, 99);
+
+    // Estimate throughput based on average response time
+    const throughput = avgResponseTime > 0 ? 1000 / avgResponseTime : 0;
+    const successRate = (successfulRequests.length / results.length) * 100;
+
+    return {
+        totalRequests: results.length,
+        successfulRequests: successfulRequests.length,
+        failedRequests: failedRequests.length,
+        successRate: Number(successRate.toFixed(2)),
+        throughput: Number(throughput.toFixed(2)),
+        avgResponseTime: Number(avgResponseTime.toFixed(2)),
+        minResponseTime: Number(minResponseTime.toFixed(2)),
+        maxResponseTime: Number(maxResponseTime.toFixed(2)),
+        p95ResponseTime: Number(p95ResponseTime.toFixed(2)),
+        p99ResponseTime: Number(p99ResponseTime.toFixed(2)),
+        errorCount: failedRequests.length
+    };
+}
 
     calculatePercentile(sortedArray, percentile) {
         if (sortedArray.length === 0) return 0;

@@ -218,18 +218,6 @@ body {
     gap: 0.75rem;
     margin-bottom: 1rem;
 }
-.metric-card {
-    background: #0f1419;
-    border: 1px solid #2d3748;
-    border-radius: 10px;
-    padding: 0.875rem;
-    transition: all 0.3s;
-}
-.metric-card:hover {
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-}
 .metric-label {
     font-size: 0.7rem;
     font-weight: 600;
@@ -242,22 +230,6 @@ body {
     display: flex;
     align-items: baseline;
     gap: 0.35rem;
-}
-.metric-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #f8fafc;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-}
-.metric-value.live {
-    color: #3b82f6;
-    animation: value-update 0.5s ease;
-}
-@keyframes value-update {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
 }
 .metric-unit {
     font-size: 0.875rem;
@@ -971,4 +943,399 @@ body {
     .comparison-badge {
         display: none;
     }
+}
+/* Enhanced metric animations */
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.3s ease-out;
+}
+.metric-value.animating {
+    animation: countUp 1.2s ease-out forwards;
+    color: #3b82f6 !important;
+}
+.metric-value.pulse {
+    animation: gentlePulse 0.6s ease-in-out;
+}
+@keyframes countUp {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+        color: #3b82f6;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+        color: #60a5fa;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        color: #f8fafc;
+    }
+}
+
+@keyframes gentlePulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+/* Success rate specific animation */
+.metric-card:nth-child(3) .metric-value.animating {
+    animation: successPulse 1.2s ease-out forwards;
+}
+@keyframes successPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+        color: #22c55e;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+        color: #4ade80;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        color: #f8fafc;
+    }
+}
+/* Error count specific animation */
+.metric-card:nth-child(4) .metric-value.animating {
+    animation: errorPulse 1.2s ease-out forwards;
+}
+@keyframes errorPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+        color: #ef4444;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+        color: #f87171;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        color: #f8fafc;
+    }
+}
+/* Throughput specific animation */
+.metric-card:nth-child(2) .metric-value.animating {
+    animation: throughputGlow 1.2s ease-out forwards;
+}
+@keyframes throughputGlow {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+        color: #8b5cf6;
+        text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+        color: #a78bfa;
+        text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        color: #f8fafc;
+        text-shadow: none;
+    }
+}
+/* Response time specific animation */
+.metric-card:nth-child(1) .metric-value.animating {
+    animation: responseTimeBounce 1.2s ease-out forwards;
+}
+@keyframes responseTimeBounce {
+    0% {
+        transform: scale(0.8) translateY(10px);
+        opacity: 0.5;
+        color: #3b82f6;
+    }
+    60% {
+        transform: scale(1.1) translateY(-5px);
+        opacity: 1;
+        color: #60a5fa;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+        color: #f8fafc;
+    }
+}
+/* Min/Max animation */
+.metric-card:nth-child(5) .metric-value.animating {
+    animation: minmaxSlide 1s ease-out forwards;
+}
+@keyframes minmaxSlide {
+    0% {
+        transform: translateX(-10px);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+/* P95 animation */
+.metric-card:nth-child(6) .metric-value.animating {
+    animation: percentileGlow 1.2s ease-out forwards;
+}
+@keyframes percentileGlow {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.5;
+        color: #f59e0b;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+        color: #fbbf24;
+        text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        color: #f8fafc;
+        text-shadow: none;
+    }
+}
+/* Enhanced metric card hover effects */
+.metric-card {
+    background: #0f1419;
+    border: 1px solid #2d3748;
+    border-radius: 10px;
+    padding: 0.875rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+.metric-card:hover::before {
+    left: 100%;
+}
+.metric-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+/* Live updating indicator */
+.metric-value.live::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    margin-left: 4px;
+    animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    } 
+}
+/* Counter animation styles */
+.metric-value.counter-animating {
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-value.counter-animating::before {
+    content: attr(data-old-value);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #3b82f6;
+}
+
+.metric-value.counter-animating::after {
+    content: attr(data-new-value);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #f8fafc;
+    animation: countUp 1.2s ease-out forwards;
+}
+
+@keyframes countUp {
+    0% {
+        top: 100%;
+        opacity: 0;
+    }
+    50% {
+        top: 0;
+        opacity: 1;
+    }
+    100% {
+        top: 0;
+        opacity: 1;
+    }
+}
+
+/* Alternative counter animation with digits */
+.metric-value.digit-counter {
+    display: inline-block;
+    position: relative;
+}
+
+.digit {
+    display: inline-block;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.digit.rolling-up {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.digit.rolling-in {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Simple number roll animation */
+@keyframes rollNumber {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.metric-value.rolling {
+    display: inline-block;
+}
+
+.rolling-digit {
+    display: inline-block;
+    animation: rollNumber 0.8s ease-out forwards;
+}
+
+/* Enhanced counter with flip effect */
+.metric-value.flip-counter {
+    perspective: 400px;
+}
+
+.flip-digit {
+    display: inline-block;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: flipDigit 0.6s ease-in-out forwards;
+}
+
+@keyframes flipDigit {
+    0% {
+        transform: rotateX(0deg);
+    }
+    50% {
+        transform: rotateX(-90deg);
+    }
+    100% {
+        transform: rotateX(0deg);
+    }
+}
+
+/* Smooth counter animation */
+@keyframes smoothCount {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.metric-value.smooth-counter {
+    animation: smoothCount 1s ease-out forwards;
+}
+
+.metric-value.progressive-counter {
+    transition: all 0.1s ease-out;
+}
+.metric-value.progressive-counter.updating {
+    color: #3b82f6;
+    transform: scale(1.05);
+}
+.metric-value.digital {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #2d3748;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Glow effect for active counters */
+.metric-value.active-counter {
+    animation: counterGlow 2s ease-in-out infinite;
+}
+
+@keyframes counterGlow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+    }
+}
+/* Sequential animation delays for metrics */
+.metric-card:nth-child(1) .metric-value.animating {
+    animation-delay: 0.1s;
+}
+.metric-card:nth-child(2) .metric-value.animating {
+    animation-delay: 0.2s;
+}
+.metric-card:nth-child(3) .metric-value.animating {
+    animation-delay: 0.3s;
+}
+.metric-card:nth-child(4) .metric-value.animating {
+    animation-delay: 0.4s;
+}
+.metric-card:nth-child(5) .metric-value.animating {
+    animation-delay: 0.5s;
+}
+.metric-card:nth-child(6) .metric-value.animating {
+    animation-delay: 0.6s;
 }
