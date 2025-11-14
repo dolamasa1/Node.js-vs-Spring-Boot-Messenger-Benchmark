@@ -32,7 +32,7 @@ That’s why I decided to start this project.
 
 ```
 Spring Boot vs Node.js Messenger Benchmark/
-├── 🎨 frontend/                 # Performance Testing Dashboard (Port 8000)
+├── 🎨 frontend/                 # Performance Testing Dashboard (Port 3000)
 ├── ⚙️ middleware/go/           # Go Performance Engine (Port 8090)
 ├── ☕ backend/springboot/       # Spring Boot Backend (Port 8080 + 5001)
 ├── ⬢ backend/nodejs/           # Node.js Backend (Port 5000)
@@ -212,12 +212,12 @@ PORT=5000
 
  ### Fast Verification ```bash # Verify every service curl http://localhost:8080/api/health #  http://localhost:5000/api/health # Spring Boot curl  Node.js curl http://localhost:8090/api/health #  Go Middleware
 
- # Verify ports using netstat -tulpn | grep -E ':(8080|5000|8090|8000)' ```
+ # Verify ports using netstat -tulpn | grep -E ':(8080|5000|8090|3000)' ```
 ### Common Issues
 - **CORS Errors**: Serve frontend via HTTP server, not file protocol
 - **Database Connection**: Verify MySQL is running and credentials match
 - **Authentication**: Check JWT tokens and backend connectivity
-- **Port Conflicts**: Ensure ports 8080, 5000, 8090, 8000 are available
+- **Port Conflicts**: Ensure ports 8080, 5000, 8090, 3000 are available
 
 ## 📚 Component Records
 
