@@ -2,11 +2,19 @@
 
 A comprehensive performance testing platform that compares **Spring Boot vs Node.js** backends with real-time analytics and advanced metrics visualization.
 
+![Version](https://img.shields.io/badge/version-1.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-blue)
+![Node.js](https://img.shields.io/badge/Node.js-18-green)
+![Go](https://img.shields.io/badge/Go-1.21-blue)
+
 ![Architecture](https://img.shields.io/badge/Architecture-Modular-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/Version-2.0-brightgreen)
 ![Backends](https://img.shields.io/badge/Backends-Spring%20Boot%20%7C%20Node.js-blue)
 ![Middleware](https://img.shields.io/badge/Middleware-Go%20Only-orange)
+
+
 
 ## 📋 Overview
 
